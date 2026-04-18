@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Trade Checklist — Swing</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Bebas+Neue&display=swap');
+
+  :root {
+    --bg: #080a0e;
+    --card: #0d1017;
+    --border: #161c26;
+    --green: #00ff87;
+    --red: #ff2d55;
+    --yellow: #ffd60a;
+    --muted: #3a4555;
+    --text: #a8b8cc;
+    --white: #e8f0f8;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    font-family: 'Space Mono', monospace;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 30px 16px;
+    position: relative;
+    overflow-x: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(0,255,135,0.025) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,255,135,0.025) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+  }
+
+  header {
+    text-align: center;
+    margin-bottom: 32px;
+  }
+
+  h1 {
+    font-family: 'Bebas Neue', cursive;
+    font-size: clamp(36px, 8vw, 58px);
+    letter-spacing: 6px;
+    color: var(--white);
+    line-height: 1;
+  }
+
+  h1 span { color: var(--green); }
+
+  .subtitle {
+    font-size: 10px;
+    letter-spacing: 3px;
+    color: var(--muted);
+    margin-top: 6px;
+    text-transform: uppercase;
+  }
+
+  .direction-toggle {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 28px;
+  }
+
+  .dir-btn {
+    flex: 1;
+    max-width: 140px;
+    padding: 10px 20px;
+    border-radius: 3px;
+    border: 1px solid var(--border);
+    background: transparent;
+    font-family: 'Bebas Neue', cursive;
+    font-size: 18px;
+    letter-spacing: 2px;
+    cursor: pointer;
+    transition: all 0.2s;
+    color: var(--muted);
+  }
+
+  .dir-btn.long.active {
+    border-color: var(--green);
+    color: var(--green);
+    background: rgba(0,255,135,0.07);
+    box-shadow: 0 0 20px rgba(0,255,135,0.15);
+  }
+
+  .dir-btn.short.active {
+    border-color: var(--red);
+    color: var(--red);
+    background: rgba(255,45,85,0.07);
+    box-shadow: 0 0 20px rgba(255,45,85,0.15);
+  }
+
+  .checklist {
+    width: 100%;
+    max-width: 500px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .section-label {
+    font-size: 9px;
+    letter-spacing: 3px;
+    color: var(--muted);
+    text-transform: uppercase;
+    padding: 0 4px;
+    margin-top: 8px;
+    margin-bottom: 2px;
+  }
+
+  .check-item {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 14px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    transition: border-color 0.2s, background 0.2s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .check-item::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 3px;
+    background: var(--border);
+    transition: background 0.2s;
+  }
+
+  .check-item.yes::before { background: var(--green); }
+  .check-item.no::before { background: var(--red); }
+
+  .check-item.yes {
+    border-color: rgba(0,255,135,0.2);
+    background: rgba(0,255,135,0.04);
+  }
+
+  .check-item.no {
+    border-color: rgba(255,45,85,0.2);
+    background: rgba(255,45,85,0.04);
+  }
+
+  .check-text {
+    flex: 1;
+    font-size: 12px;
+    line-height: 1.5;
+    color: var(--text);
+  }
+
+  .check-text strong {
+    display: block;
+    color: var(--white);
+    font-size: 11px;
+    letter-spacing: 0.5px;
+    margin-bottom: 2px;
+  }
+
+  .check-num {
+    font-family: 'Bebas Neue', cursive;
+    font-size: 22px;
+    color: var(--border);
+    min-width: 28px;
+    transition: color 0.2s;
+  }
+
+  .check-item.yes .check-num { color: rgba(0,255,135,0.3); }
+  .check-item.no .check-num { color: rgba(255,45,85,0.3); }
+
+  .btn-group {
+    display: flex;
+    gap: 6px;
+    flex-shrink: 0;
+  }
+
+  .yn-btn {
+    width: 46px;
+    height: 32px;
+    border-radius: 3px;
+    border: 1px solid var(--border);
+    background: transparent;
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    cursor: pointer;
+    transition: all 0.15s;
+    color: var(--muted);
+  }
+
+  .yn-btn.yes-btn:hover { border-color: var(--green); color: var(--green); }
+  .yn-btn.no-btn:hover { border-color: var(--red); color: var(--red); }
+
+  .yn-btn.yes-btn.selected {
+    background: var(--green);
+    border-color: var(--green);
+    color: #000;
+    box-shadow: 0 0 12px rgba(0,255,135,0.3);
+  }
+
+  .yn-btn.no-btn.selected {
+    background: var(--red);
+    border-color: var(--red);
+    color: #fff;
+    box-shadow: 0 0 12px rgba(255,45,85,0.3);
+  }
+
+  .result-panel {
+    width: 100%;
+    max-width: 500px;
+    margin-top: 20px;
+    border-radius: 4px;
+    padding: 20px;
+    text-align: center;
+    display: none;
+    animation: fadeIn 0.3s ease;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .result-panel.go {
+    background: rgba(0,255,135,0.07);
+    border: 1px solid rgba(0,255,135,0.4);
+    box-shadow: 0 0 40px rgba(0,255,135,0.1);
+    display: block;
+  }
+
+  .result-panel.nogo {
+    background: rgba(255,45,85,0.07);
+    border: 1px solid rgba(255,45,85,0.4);
+    box-shadow: 0 0 40px rgba(255,45,85,0.1);
+    display: block;
+  }
+
+  .result-icon {
+    font-family: 'Bebas Neue', cursive;
+    font-size: 52px;
+    letter-spacing: 4px;
+    line-height: 1;
+    margin-bottom: 8px;
+  }
+
+  .go .result-icon { color: var(--green); }
+  .nogo .result-icon { color: var(--red); }
+
+  .result-msg {
+    font-size: 11px;
+    color: var(--text);
+    line-height: 1.7;
+    letter-spacing: 0.5px;
+  }
+
+  .progress-bar {
+    width: 100%;
+    max-width: 500px;
+    height: 3px;
+    background: var(--border);
+    border-radius: 2px;
+    margin-bottom: 20px;
+    overflow: hidden;
+  }
+
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--green), #00c4ff);
+    border-radius: 2px;
+    transition: width 0.4s ease;
+    width: 0%;
+  }
+
+  .reset-btn {
+    margin-top: 16px;
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    padding: 10px 28px;
+    border-radius: 3px;
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 2px;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-transform: uppercase;
+  }
+
+  .reset-btn:hover {
+    border-color: var(--yellow);
+    color: var(--yellow);
+  }
+
+  .score {
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 2px;
+    margin-bottom: 16px;
+  }
+
+  .score span { color: var(--white); }
+</style>
+</head>
+<body>
+
+<header>
+  <div style="font-family:'Bebas Neue',cursive;font-size:11px;letter-spacing:4px;color:#3d9eff;margin-bottom:6px;">S&D SWING SETUP</div>
+  <h1>TRADE<span>CHECK</span></h1>
+  <div class="subtitle">Daily Zone · 1H Confirmation Entry</div>
+</header>
+
+<div class="direction-toggle">
+  <button class="dir-btn long" onclick="setDir('long')">▲ LONG</button>
+  <button class="dir-btn short" onclick="setDir('short')">▼ SHORT</button>
+</div>
+
+<div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+<div class="score">COMPLETED: <span id="scoreText">0 / 11</span></div>
+
+<div class="checklist" id="checklist"></div>
+<div class="result-panel" id="resultPanel"></div>
+
+<button class="reset-btn" onclick="reset()">↺ RESET</button>
+
+<script>
+let direction = null;
+let answers = {};
+
+const items = [
+  {
+    id: 'cot_bias',
+    section: 'BIAS',
+    title: 'COT aligned with trade direction',
+    desc: 'Non-Commercials must be positioned in trade direction'
+  },
+  {
+    id: 'd_move',
+    section: 'DAILY ZONE',
+    title: 'Strong move away from zone',
+    desc: 'There must be a strong impulsive move away from the base'
+  },
+  {
+    id: 'd_candles',
+    section: null,
+    title: 'Min. 2 clear candles',
+    desc: 'Move away must have minimum 2 clear candles'
+  },
+  {
+    id: 'd_imbalance',
+    section: null,
+    title: 'Imbalance min 2:1',
+    desc: 'Imbalance must be minimum 2:1'
+  },
+  {
+    id: 'd_no_50',
+    section: null,
+    title: 'No 50% candle',
+    desc: 'No candle in the move away can close at 50% or below its range'
+  },
+  {
+    id: 'd_ml',
+    section: null,
+    title: 'Momentum Line break',
+    desc: 'The zone must be the one that caused the break of the Momentum Line'
+  },
+  {
+    id: 'd_no_opposing',
+    section: null,
+    title: 'Price removed opposing zone',
+    desc: 'Price must have removed the opposing zone'
+  },
+  {
+    id: 'h1_candles',
+    section: '1H ENTRY CONFIRMATION',
+    title: 'Min. 2 clear 1H candles',
+    desc: 'There must be minimum 2 clear 1H candles in trade direction'
+  },
+  {
+    id: 'h1_imbalance',
+    section: null,
+    title: '1H Imbalance min 2:1',
+    desc: 'Imbalance must be minimum 2:1'
+  },
+  {
+    id: 'h1_ml_or_opposing',
+    section: null,
+    title: 'ML break OR Price removed opposing zone',
+    desc: 'At least one must be true: Momentum Line break OR opposing zone removed'
+  },
+  {
+    id: 'h1_candle_rule',
+    section: null,
+    title: '1-4 Candle Rule',
+    desc: 'All 3 conditions (min. 2 candles, imbalance 2:1, ML break OR opposing zone removed) must be completed within maximum 4 candles from the origin of the base. If not achieved within 4 candles — do NOT take the trade.'
+  }
+];
+
+const goMessages = {
+  long: "ALL GREEN — enter LONG. SL below 1H Demand zone. TP at next Daily Supply zone or previous High. Bias supports the move — let it run.",
+  short: "ALL GREEN — enter SHORT. SL above 1H Supply zone. TP at next Daily Demand zone or previous Low. Bias supports the move — let it run."
+};
+
+const nogoMessages = {
+  missing_direction: "Select trade direction — LONG or SHORT.",
+  has_no: "One or more conditions are not met. This setup is not valid. Close the chart and wait for the next one."
+};
+
+function setDir(dir) {
+  direction = dir;
+  document.querySelectorAll('.dir-btn').forEach(b => b.classList.remove('active'));
+  document.querySelector('.dir-btn.' + dir).classList.add('active');
+  evaluate();
+}
+
+function render() {
+  const cl = document.getElementById('checklist');
+  cl.innerHTML = '';
+  let lastSection = null;
+
+  items.forEach((item, i) => {
+    if (item.section && item.section !== lastSection) {
+      lastSection = item.section;
+      const lbl = document.createElement('div');
+      lbl.className = 'section-label';
+      lbl.textContent = item.section;
+      cl.appendChild(lbl);
+    }
+
+    const ans = answers[item.id];
+    const div = document.createElement('div');
+    div.className = 'check-item' + (ans === true ? ' yes' : ans === false ? ' no' : '');
+    div.innerHTML = `
+      <div class="check-num">${String(i+1).padStart(2,'0')}</div>
+      <div class="check-text">
+        <strong>${item.title}</strong>
+        ${item.desc}
+      </div>
+      <div class="btn-group">
+        <button class="yn-btn yes-btn ${ans === true ? 'selected' : ''}" onclick="answer('${item.id}', true)">YES</button>
+        <button class="yn-btn no-btn ${ans === false ? 'selected' : ''}" onclick="answer('${item.id}', false)">NO</button>
+      </div>
+    `;
+    cl.appendChild(div);
+  });
+}
+
+function answer(id, val) {
+  answers[id] = val;
+  render();
+  evaluate();
+}
+
+function evaluate() {
+  const total = items.length;
+  const answered = Object.keys(answers).length;
+  const yesCount = Object.values(answers).filter(v => v === true).length;
+  const hasNo = Object.values(answers).some(v => v === false);
+
+  const pct = (answered / total) * 100;
+  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('scoreText').textContent = `${yesCount} / ${total}`;
+
+  const panel = document.getElementById('resultPanel');
+
+  if (!direction) {
+    panel.className = 'result-panel nogo';
+    panel.innerHTML = `<div class="result-icon">⚠</div><div class="result-msg">${nogoMessages.missing_direction}</div>`;
+    return;
+  }
+
+  if (answered < total) {
+    panel.className = 'result-panel';
+    panel.style.display = 'none';
+    return;
+  }
+
+  if (hasNo) {
+    panel.className = 'result-panel nogo';
+    panel.innerHTML = `
+      <div class="result-icon">NO GO</div>
+      <div class="result-msg">${nogoMessages.has_no}</div>
+    `;
+  } else {
+    panel.className = 'result-panel go';
+    panel.innerHTML = `
+      <div class="result-icon">GO</div>
+      <div class="result-msg">${goMessages[direction]}</div>
+    `;
+  }
+}
+
+function reset() {
+  answers = {};
+  direction = null;
+  document.querySelectorAll('.dir-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('progressFill').style.width = '0%';
+  document.getElementById('scoreText').textContent = '0 / 11';
+  document.getElementById('resultPanel').className = 'result-panel';
+  document.getElementById('resultPanel').style.display = 'none';
+  render();
+}
+
+render();
+evaluate();
+</script>
+</body>
+</html>
