@@ -150,7 +150,7 @@ main {
   border-radius: 4px;
   padding: 16px 20px;
   display: grid;
-  grid-template-columns: 100px 80px 80px 80px 80px 80px 1fr 80px;
+  grid-template-columns: 100px 80px 60px 60px 80px 80px 1fr 80px;
   align-items: center;
   gap: 12px;
   transition: border-color 0.2s;
@@ -244,7 +244,7 @@ main {
 /* ====== TABLE HEADER ====== */
 .table-header {
   display: grid;
-  grid-template-columns: 100px 80px 80px 80px 80px 80px 1fr 80px;
+  grid-template-columns: 100px 80px 60px 60px 80px 80px 1fr 80px;
   gap: 12px;
   padding: 8px 20px;
   margin-bottom: 4px;
@@ -564,10 +564,10 @@ main {
   <div class="table-header">
     <div class="th">Pair</div>
     <div class="th">Direction</div>
-    <div class="th">TF</div>
+    <div class="th">HTF</div>
+    <div class="th">LTF</div>
     <div class="th">Entry</div>
-    <div class="th">SL</div>
-    <div class="th">TP</div>
+    <div class="th">SL / TP</div>
     <div class="th">Notes</div>
     <div class="th">Result</div>
   </div>
@@ -606,12 +606,19 @@ main {
           </div>
         </div>
         <div class="form-group">
-          <label>Timeframe</label>
-          <select id="fTF">
-            <option value="">Select TF</option>
-            <option>M1</option><option>M5</option><option>M15</option><option>M30</option>
-            <option>1H</option><option>2H</option><option>4H</option>
-            <option>Daily</option><option>Weekly</option>
+          <label>HTF Zone (Higher Timeframe)</label>
+          <select id="fHTF">
+            <option value="">Select HTF</option>
+            <option>Weekly</option><option>Daily</option>
+            <option>4H</option><option>2H</option><option>1H</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>LTF Entry (Lower Timeframe)</label>
+          <select id="fLTF">
+            <option value="">Select LTF</option>
+            <option>4H</option><option>1H</option><option>30min</option>
+            <option>15min</option><option>5min</option><option>1min</option>
           </select>
         </div>
         <div class="form-group">
@@ -639,8 +646,12 @@ main {
           </div>
         </div>
         <div class="form-group">
-          <label>Screenshot URL (optional)</label>
-          <input type="text" id="fScreenshot" placeholder="https://..." />
+          <label>HTF Screenshot URL (optional)</label>
+          <input type="text" id="fScreenshotHTF" placeholder="https://..." />
+        </div>
+        <div class="form-group">
+          <label>LTF Screenshot URL (optional)</label>
+          <input type="text" id="fScreenshotLTF" placeholder="https://..." />
         </div>
       </div>
 
@@ -813,8 +824,10 @@ function openModal() {
   document.getElementById('fTP').value = '';
   document.getElementById('fRR').value = '';
   document.getElementById('fNotes').value = '';
-  document.getElementById('fScreenshot').value = '';
-  document.getElementById('fTF').value = '';
+  document.getElementById('fScreenshotHTF').value = '';
+  document.getElementById('fScreenshotLTF').value = '';
+  document.getElementById('fHTF').value = '';
+  document.getElementById('fLTF').value = '';
   selectedDir = '';
   selectedResult = '';
   checkedScores.clear();
@@ -847,12 +860,14 @@ function saveTrade() {
     date: document.getElementById('fDate').value,
     pair,
     direction: selectedDir,
-    tf: document.getElementById('fTF').value,
+    htf: document.getElementById('fHTF').value,
+    ltf: document.getElementById('fLTF').value,
     entry, sl, tp,
     rr,
     result: selectedResult,
     notes: document.getElementById('fNotes').value.trim(),
-    screenshot: document.getElementById('fScreenshot').value.trim(),
+    screenshotHTF: document.getElementById('fScreenshotHTF').value.trim(),
+    screenshotLTF: document.getElementById('fScreenshotLTF').value.trim(),
     checklist: Array.from(checkedScores),
     checklistScore: checkedScores.size,
   };
@@ -913,8 +928,12 @@ function openDetail(trade) {
         <div class="detail-value">${trade.date}</div>
       </div>
       <div class="detail-item">
-        <div class="detail-label">Timeframe</div>
-        <div class="detail-value">${trade.tf || '—'}</div>
+        <div class="detail-label">HTF Zone</div>
+        <div class="detail-value">${trade.htf || '—'}</div>
+      </div>
+      <div class="detail-item">
+        <div class="detail-label">LTF Entry</div>
+        <div class="detail-value">${trade.ltf || '—'}</div>
       </div>
       <div class="detail-item">
         <div class="detail-label">Entry</div>
@@ -948,10 +967,15 @@ function openDetail(trade) {
         <div class="detail-label" style="margin-bottom:6px">Notes</div>
         <div style="background:var(--bg);border:1px solid var(--border);border-radius:3px;padding:12px;font-size:11px;line-height:1.7;color:var(--text)">${trade.notes}</div>
       </div>` : ''}
-    ${trade.screenshot ? `
+    ${trade.screenshotHTF ? `
       <div style="margin-bottom:16px">
-        <div class="detail-label" style="margin-bottom:6px">Screenshot</div>
-        <a href="${trade.screenshot}" target="_blank" style="color:var(--blue);font-size:11px">Open screenshot ↗</a>
+        <div class="detail-label" style="margin-bottom:6px">HTF Screenshot</div>
+        <a href="${trade.screenshotHTF}" target="_blank" style="color:var(--blue);font-size:11px">Open HTF chart ↗</a>
+      </div>` : ''}
+    ${trade.screenshotLTF ? `
+      <div style="margin-bottom:16px">
+        <div class="detail-label" style="margin-bottom:6px">LTF Screenshot</div>
+        <a href="${trade.screenshotLTF}" target="_blank" style="color:var(--blue);font-size:11px">Open LTF chart ↗</a>
       </div>` : ''}
     <div>
       <div class="detail-label" style="margin-bottom:8px">MBT Checklist</div>
@@ -1007,7 +1031,7 @@ function render() {
     <div class="trade-card ${t.result}" onclick="openDetail(${JSON.stringify(t).replace(/"/g,'&quot;')})">
       <div class="tc-pair">${t.pair}</div>
       <div class="tc-dir ${t.direction}">${t.direction === 'long' ? '▲ LONG' : '▼ SHORT'}</div>
-      <div class="tc-val"><span>TF</span>${t.tf || '—'}</div>
+      <div class="tc-val"><span>HTF</span>${t.htf || '—'}</div><div class="tc-val"><span>LTF</span>${t.ltf || '—'}</div>
       <div class="tc-val"><span>Entry</span>${t.entry || '—'}</div>
       <div class="tc-val"><span>SL</span><span style="color:var(--red)">${t.sl || '—'}</span></div>
       <div class="tc-val"><span>TP</span><span style="color:var(--green)">${t.tp || '—'}</span></div>
