@@ -1,0 +1,1109 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Daily Trading Routine</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0a;
+    --surface: #111111;
+    --border: #1e1e1e;
+    --accent: #c8f135;
+    --accent2: #ff4d4d;
+    --accent3: #4d9fff;
+    --text: #e8e8e8;
+    --muted: #555;
+    --green: #c8f135;
+    --red: #ff4d4d;
+    --yellow: #ffcc00;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Syne', sans-serif;
+    min-height: 100vh;
+    padding: 24px 16px 60px;
+    max-width: 680px;
+    margin: 0 auto;
+  }
+
+  /* HEADER */
+  .header {
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 20px;
+    margin-bottom: 32px;
+  }
+
+  .header-tag {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    color: var(--accent);
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+
+  .header h1 {
+    font-size: 28px;
+    font-weight: 800;
+    line-height: 1.1;
+    letter-spacing: -0.5px;
+  }
+
+  .header h1 span {
+    color: var(--accent);
+  }
+
+  .date-display {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 8px;
+  }
+
+  /* SECTION */
+  .section {
+    margin-bottom: 28px;
+  }
+
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+
+  .section-time {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    color: var(--accent);
+    background: rgba(200, 241, 53, 0.08);
+    border: 1px solid rgba(200, 241, 53, 0.2);
+    padding: 3px 8px;
+    border-radius: 3px;
+    white-space: nowrap;
+  }
+
+  .section-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--muted);
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+  }
+
+  /* PHASE BLOCK */
+  .phase {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+    margin-bottom: 8px;
+  }
+
+  .phase-label {
+    padding: 12px 16px;
+    font-size: 15px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    user-select: none;
+    border-bottom: 1px solid transparent;
+    transition: border-color 0.2s;
+  }
+
+  .phase.open .phase-label {
+    border-bottom-color: var(--border);
+  }
+
+  .phase-icon {
+    font-size: 18px;
+    width: 28px;
+    text-align: center;
+  }
+
+  .phase-arrow {
+    margin-left: auto;
+    font-size: 12px;
+    color: var(--muted);
+    transition: transform 0.2s;
+  }
+
+  .phase.open .phase-arrow {
+    transform: rotate(180deg);
+  }
+
+  .phase-body {
+    display: none;
+    padding: 16px;
+  }
+
+  .phase.open .phase-body {
+    display: block;
+  }
+
+  /* CHECKLIST ITEMS */
+  .check-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+  }
+
+  .check-item:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+  }
+
+  .check-box {
+    width: 20px;
+    height: 20px;
+    border: 1.5px solid var(--muted);
+    border-radius: 4px;
+    flex-shrink: 0;
+    margin-top: 2px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s;
+    font-size: 13px;
+  }
+
+  .check-item.checked .check-box {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #000;
+  }
+
+  .check-text {
+    font-size: 14px;
+    line-height: 1.5;
+    color: var(--text);
+    transition: color 0.15s;
+  }
+
+  .check-item.checked .check-text {
+    color: var(--muted);
+    text-decoration: line-through;
+  }
+
+  .check-note {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+    margin-top: 3px;
+  }
+
+  /* DAILY LOSS CALCULATOR */
+  .calc-block {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 28px;
+  }
+
+  .calc-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--muted);
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    margin-bottom: 16px;
+  }
+
+  .calc-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+
+  .calc-label {
+    font-size: 13px;
+    color: var(--muted);
+    flex: 1;
+    font-family: 'Space Mono', monospace;
+  }
+
+  .calc-input {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    color: var(--text);
+    font-family: 'Space Mono', monospace;
+    font-size: 14px;
+    padding: 8px 12px;
+    width: 130px;
+    text-align: right;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+
+  .calc-input:focus {
+    border-color: var(--accent);
+  }
+
+  .calc-input::placeholder {
+    color: var(--muted);
+  }
+
+  .calc-divider {
+    height: 1px;
+    background: var(--border);
+    margin: 12px 0;
+  }
+
+  .calc-result {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .calc-result-label {
+    font-size: 14px;
+    font-weight: 600;
+  }
+
+  .calc-result-value {
+    font-family: 'Space Mono', monospace;
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--accent2);
+  }
+
+  .circuit-breaker {
+    margin-top: 14px;
+    padding: 12px;
+    border-radius: 6px;
+    background: rgba(255, 77, 77, 0.08);
+    border: 1px solid rgba(255, 77, 77, 0.2);
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    color: var(--accent2);
+    line-height: 1.6;
+  }
+
+  /* PRE-TRADE GATE */
+  .gate-block {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 28px;
+  }
+
+  .gate-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--muted);
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+
+  .gate-subtitle {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+    margin-bottom: 16px;
+  }
+
+  .gate-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+  }
+
+  .gate-item:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+  }
+
+  .gate-box {
+    width: 22px;
+    height: 22px;
+    border: 1.5px solid var(--muted);
+    border-radius: 4px;
+    flex-shrink: 0;
+    margin-top: 1px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    transition: all 0.15s;
+  }
+
+  .gate-item.checked .gate-box {
+    background: var(--green);
+    border-color: var(--green);
+    color: #000;
+  }
+
+  .gate-item.blocked .gate-box {
+    background: var(--red);
+    border-color: var(--red);
+    color: #fff;
+  }
+
+  .gate-text {
+    font-size: 14px;
+    line-height: 1.5;
+    flex: 1;
+  }
+
+  .gate-item.checked .gate-text {
+    color: var(--muted);
+  }
+
+  .gate-tag {
+    font-family: 'Space Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 1px;
+    padding: 2px 6px;
+    border-radius: 3px;
+    flex-shrink: 0;
+    margin-top: 3px;
+  }
+
+  .tag-block { background: rgba(255,77,77,0.15); color: var(--red); }
+  .tag-mbt { background: rgba(77,159,255,0.15); color: var(--accent3); }
+  .tag-sd { background: rgba(200,241,53,0.12); color: var(--accent); }
+
+  .gate-verdict {
+    margin-top: 16px;
+    padding: 14px;
+    border-radius: 6px;
+    text-align: center;
+    font-size: 16px;
+    font-weight: 800;
+    letter-spacing: 2px;
+    transition: all 0.3s;
+  }
+
+  .gate-verdict.go {
+    background: rgba(200, 241, 53, 0.1);
+    border: 1px solid rgba(200, 241, 53, 0.3);
+    color: var(--accent);
+  }
+
+  .gate-verdict.no-go {
+    background: rgba(255, 77, 77, 0.1);
+    border: 1px solid rgba(255, 77, 77, 0.3);
+    color: var(--accent2);
+  }
+
+  .gate-verdict.neutral {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--border);
+    color: var(--muted);
+  }
+
+  /* RESET */
+  .reset-btn {
+    width: 100%;
+    padding: 14px;
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--muted);
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 2px;
+    cursor: pointer;
+    transition: all 0.15s;
+    text-transform: uppercase;
+    margin-top: 8px;
+  }
+
+  .reset-btn:hover {
+    border-color: var(--accent2);
+    color: var(--accent2);
+  }
+
+  /* PAUSE BANNER */
+  .pause-banner {
+    background: rgba(255, 204, 0, 0.06);
+    border: 1px solid rgba(255, 204, 0, 0.2);
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 8px;
+    text-align: center;
+  }
+
+  .pause-banner .pause-icon {
+    font-size: 28px;
+    display: block;
+    margin-bottom: 6px;
+  }
+
+  .pause-banner p {
+    font-size: 13px;
+    color: var(--yellow);
+    font-weight: 600;
+  }
+
+  .pause-banner small {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+  }
+
+  /* PROGRESS BAR */
+  .progress-wrap {
+    margin-bottom: 28px;
+  }
+
+  .progress-label {
+    display: flex;
+    justify-content: space-between;
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+
+  .progress-bar {
+    height: 3px;
+    background: var(--border);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+
+  .progress-fill {
+    height: 100%;
+    background: var(--accent);
+    border-radius: 2px;
+    transition: width 0.3s;
+  }
+
+  /* RULES */
+  .rules-block {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 28px;
+  }
+
+  .rule-item {
+    display: flex;
+    gap: 12px;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 13px;
+    line-height: 1.5;
+  }
+
+  .rule-item:last-child { border-bottom: none; }
+
+  .rule-num {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    color: var(--accent);
+    flex-shrink: 0;
+    padding-top: 2px;
+  }
+
+  /* FOOTER */
+  .footer {
+    text-align: center;
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+    padding-top: 24px;
+    border-top: 1px solid var(--border);
+    margin-top: 32px;
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-tag">MBT · S&D · 1H/M1</div>
+  <h1>Daily Trading<br><span>Routine</span></h1>
+  <div class="date-display" id="dateDisplay">—</div>
+</div>
+
+<!-- PROGRESS -->
+<div class="progress-wrap">
+  <div class="progress-label">
+    <span>DNEVNI NAPREDAK</span>
+    <span id="progressText">0 / 0</span>
+  </div>
+  <div class="progress-bar">
+    <div class="progress-fill" id="progressFill" style="width:0%"></div>
+  </div>
+</div>
+
+<!-- MAX DAILY LOSS CALCULATOR -->
+<div class="calc-block">
+  <div class="calc-title">⛔ Max Daily Loss</div>
+  <div class="calc-row">
+    <span class="calc-label">Kapital (€/$)</span>
+    <input class="calc-input" id="capital" type="number" placeholder="75000" value="75000" oninput="calcLoss()">
+  </div>
+  <div class="calc-row">
+    <span class="calc-label">Max rizik po danu (%)</span>
+    <input class="calc-input" id="riskPct" type="number" placeholder="1" value="1" oninput="calcLoss()">
+  </div>
+  <div class="calc-divider"></div>
+  <div class="calc-result" style="margin-bottom:10px">
+    <span class="calc-result-label" style="font-size:13px;color:var(--muted)">Rizik po trejdu (0.5%):</span>
+    <span style="font-family:'Space Mono',monospace;font-size:16px;color:var(--accent)" id="perTrade">€375</span>
+  </div>
+  <div class="calc-result" style="margin-bottom:10px">
+    <span class="calc-result-label">Stop trading na:</span>
+    <span class="calc-result-value" id="maxLoss">-€750</span>
+  </div>
+  <div style="font-family:'Space Mono',monospace;font-size:10px;color:var(--muted);margin-bottom:4px">
+    FTMO Max Daily Limit: -€4,000 · Tvoj limit je daleko ispod ✓
+  </div>
+  <div class="circuit-breaker">
+    ⚡ CIRCUIT BREAKER — Kada dostigneš ovaj iznos gubitka:<br>
+    1. Zatvori platform odmah<br>
+    2. Ne otvaraj ga sledeća 2 sata<br>
+    3. Zapiši u journal šta se desilo<br>
+    4. Sutra krećeš ispočetka
+  </div>
+</div>
+
+<!-- POSITION SIZE CALCULATOR -->
+<div class="calc-block">
+  <div class="calc-title">📐 Position Size Kalkulator</div>
+
+  <div class="calc-row">
+    <span class="calc-label">Par</span>
+    <select class="calc-input" id="pairSelect" onchange="calcSize()" style="text-align:left;cursor:pointer">
+      <optgroup label="Majors">
+        <option value="EURUSD">EURUSD</option>
+        <option value="GBPUSD">GBPUSD</option>
+        <option value="AUDUSD">AUDUSD</option>
+        <option value="NZDUSD">NZDUSD</option>
+        <option value="USDCAD">USDCAD</option>
+        <option value="USDCHF">USDCHF</option>
+        <option value="USDJPY">USDJPY</option>
+      </optgroup>
+      <optgroup label="Crosses">
+        <option value="EURGBP">EURGBP</option>
+        <option value="EURJPY">EURJPY</option>
+        <option value="EURCAD">EURCAD</option>
+        <option value="EURCHF">EURCHF</option>
+        <option value="EURAUD">EURAUD</option>
+        <option value="EURNZD">EURNZD</option>
+        <option value="GBPJPY">GBPJPY</option>
+        <option value="GBPAUD">GBPAUD</option>
+        <option value="GBPCAD">GBPCAD</option>
+        <option value="GBPCHF">GBPCHF</option>
+        <option value="GBPNZD">GBPNZD</option>
+        <option value="AUDJPY">AUDJPY</option>
+        <option value="CADJPY">CADJPY</option>
+        <option value="CHFJPY">CHFJPY</option>
+        <option value="NZDJPY">NZDJPY</option>
+        <option value="AUDCAD">AUDCAD</option>
+        <option value="AUDCHF">AUDCHF</option>
+        <option value="AUDNZD">AUDNZD</option>
+      </optgroup>
+      <optgroup label="Metali / Ostalo">
+        <option value="XAUUSD">XAUUSD (Gold)</option>
+        <option value="XAGUSD">XAGUSD (Silver)</option>
+      </optgroup>
+    </select>
+  </div>
+
+  <div class="calc-row">
+    <span class="calc-label">Stop Loss (pips)</span>
+    <input class="calc-input" id="slPips" type="number" placeholder="10" oninput="calcSize()">
+  </div>
+
+  <div class="calc-row">
+    <span class="calc-label">Rizik po trejdu (€)</span>
+    <input class="calc-input" id="riskAmount" type="number" placeholder="375" oninput="calcSize()">
+  </div>
+
+  <div class="calc-divider"></div>
+
+  <div class="calc-result" style="margin-bottom:10px">
+    <span class="calc-result-label" style="font-size:13px;color:var(--muted)">Pip Value (1 lot):</span>
+    <span style="font-family:'Space Mono',monospace;font-size:14px;color:var(--text)" id="pipValue">—</span>
+  </div>
+
+  <div class="calc-result">
+    <span class="calc-result-label">Lot Size:</span>
+    <span class="calc-result-value" style="color:var(--accent)" id="lotSize">—</span>
+  </div>
+
+  <div style="font-family:'Space Mono',monospace;font-size:10px;color:var(--muted);margin-top:10px" id="sizeNote">
+    Unesi sve vrednosti da dobiješ lot size
+  </div>
+</div>
+
+<!-- PRE-TRADE GATE -->
+<div class="gate-block">
+  <div class="gate-title">🚦 Pre-Trade Gate</div>
+  <div class="gate-subtitle">SVE mora biti ✓ pre ulaska. Jedan ✗ = nema trejda.</div>
+
+  <div class="gate-item" onclick="toggleGate(this)">
+    <div class="gate-box"></div>
+    <div style="flex:1">
+      <div class="gate-text">Zona je na 1H timeframe-u (Supply ili Demand)</div>
+    </div>
+    <span class="gate-tag tag-sd">S&D</span>
+  </div>
+
+  <div class="gate-item" onclick="toggleGate(this)">
+    <div class="gate-box"></div>
+    <div style="flex:1">
+      <div class="gate-text">Strong move away od zone (minimum 2 čiste sveće)</div>
+    </div>
+    <span class="gate-tag tag-sd">S&D</span>
+  </div>
+
+  <div class="gate-item" onclick="toggleGate(this)">
+    <div class="gate-box"></div>
+    <div style="flex:1">
+      <div class="gate-text">Imbalance minimum 2:1</div>
+    </div>
+    <span class="gate-tag tag-sd">S&D</span>
+  </div>
+
+  <div class="gate-item" onclick="toggleGate(this)">
+    <div class="gate-box"></div>
+    <div style="flex:1">
+      <div class="gate-text">Cena je uklonila opposing zone ispred</div>
+    </div>
+    <span class="gate-tag tag-sd">S&D</span>
+  </div>
+
+  <div class="gate-item" onclick="toggleGate(this)">
+    <div class="gate-box"></div>
+    <div style="flex:1">
+      <div class="gate-text">Nema 50% candle u bazi</div>
+    </div>
+    <span class="gate-tag tag-mbt">MBT</span>
+  </div>
+
+  <div class="gate-item" onclick="toggleGate(this)">
+    <div class="gate-box"></div>
+    <div style="flex:1">
+      <div class="gate-text">Momentum Line je breakovan</div>
+    </div>
+    <span class="gate-tag tag-mbt">MBT</span>
+  </div>
+
+  <div class="gate-item" onclick="toggleGate(this)">
+    <div class="gate-box"></div>
+    <div style="flex:1">
+      <div class="gate-text">1-4 Candle Rule potvrđena na M1</div>
+    </div>
+    <span class="gate-tag tag-mbt">MBT</span>
+  </div>
+
+  <div class="gate-item" onclick="toggleGate(this)">
+    <div class="gate-box" style="border-color: #ff4d4d;"></div>
+    <div style="flex:1">
+      <div class="gate-text">TP imam konkretan razlog: zona / swing / liquidity</div>
+      <div class="check-note">Ne "lepi RR" — stvarni nivo na chartu</div>
+    </div>
+    <span class="gate-tag tag-block">KRITIČNO</span>
+  </div>
+
+  <div class="gate-item" onclick="toggleGate(this)">
+    <div class="gate-box" style="border-color: #ff4d4d;"></div>
+    <div style="flex:1">
+      <div class="gate-text">Cena je stigla do zone — nisam jurio entry</div>
+      <div class="check-note">Ako je prošla 5+ pips od entry — preskačem</div>
+    </div>
+    <span class="gate-tag tag-block">FOMO CHECK</span>
+  </div>
+
+  <div class="gate-verdict neutral" id="gateVerdict">
+    POPUNI CHECKLIST
+  </div>
+</div>
+
+<!-- DNEVNA RUTINA -->
+<div class="section-header">
+  <span class="section-title">Dnevna Rutina</span>
+</div>
+
+<!-- PRE-LONDON -->
+<div class="phase" id="phase1">
+  <div class="phase-label" onclick="togglePhase('phase1')">
+    <span class="phase-icon">📋</span>
+    <div>
+      <div style="font-size:15px;font-weight:700">Pre-London Analiza</div>
+    </div>
+    <div style="margin-left:auto;display:flex;align-items:center;gap:10px">
+      <span class="section-time">09:30 – 10:00</span>
+      <span class="phase-arrow">▼</span>
+    </div>
+  </div>
+  <div class="phase-body">
+    <div class="check-item" onclick="toggleCheck(this)">
+      <div class="check-box"></div>
+      <div><div class="check-text">Markiraj sve relevantne 1H zone (Supply i Demand)</div></div>
+    </div>
+    <div class="check-item" onclick="toggleCheck(this)">
+      <div class="check-box"></div>
+      <div><div class="check-text">Identifikuj max 2-3 potencijalna setupa za danas</div></div>
+    </div>
+    <div class="check-item" onclick="toggleCheck(this)">
+      <div class="check-box"></div>
+      <div><div class="check-text">Proveri DXY bias (inverzna korelacija sa EURUSD)</div></div>
+    </div>
+    <div class="check-item" onclick="toggleCheck(this)">
+      <div class="check-box"></div>
+      <div>
+        <div class="check-text">Zapiši plan: koje zone, koji entry trigger, gde TP</div>
+        <div class="check-note">Posle ovoga — zatvori chart do 10:00</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- LONDON -->
+<div class="phase" id="phase2">
+  <div class="phase-label" onclick="togglePhase('phase2')">
+    <span class="phase-icon">🇬🇧</span>
+    <div>
+      <div style="font-size:15px;font-weight:700">London / NY Overlap</div>
+    </div>
+    <div style="margin-left:auto;display:flex;align-items:center;gap:10px">
+      <span class="section-time">10:00 – 13:00</span>
+      <span class="phase-arrow">▼</span>
+    </div>
+  </div>
+  <div class="phase-body">
+    <div class="check-item" onclick="toggleCheck(this)">
+      <div class="check-box"></div>
+      <div><div class="check-text">Gledaš SAMO markirana mesta iz pre-analize</div></div>
+    </div>
+    <div class="check-item" onclick="toggleCheck(this)">
+      <div class="check-box"></div>
+      <div>
+        <div class="check-text">Pre svakog ulaska — prođi kroz Pre-Trade Gate</div>
+        <div class="check-note">Sve zeleno = ulaz. Jedno crveno = čekaš</div>
+      </div>
+    </div>
+    <div class="check-item" onclick="toggleCheck(this)">
+      <div class="check-box"></div>
+      <div><div class="check-text">TP postavljaš PRE ulaska, ne menjaš ga posle</div></div>
+    </div>
+    <div class="check-item" onclick="toggleCheck(this)">
+      <div class="check-box"></div>
+      <div>
+        <div class="check-text">Na 1:2 RR — 50% pozicije zatvoriš, ostatak na BE</div>
+        <div class="check-note">Ili definišeš svoja pravila i imaš ih pisana</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PAUZA -->
+<div class="pause-banner">
+  <span class="pause-icon">🔴</span>
+  <p>OBAVEZNA PAUZA — NE GLEDAŠ CHART</p>
+  <small>13:00 – 14:30 · Izađi, pojedi, odmori mozak</small>
+</div>
+
+<!-- NY -->
+<div class="phase" id="phase3">
+  <div class="phase-label" onclick="togglePhase('phase3')">
+    <span class="phase-icon">🇺🇸</span>
+    <div>
+      <div style="font-size:15px;font-weight:700">NY Sesija (vikend)</div>
+    </div>
+    <div style="margin-left:auto;display:flex;align-items:center;gap:10px">
+      <span class="section-time">14:30 – 17:00</span>
+      <span class="phase-arrow">▼</span>
+    </div>
+  </div>
+  <div class="phase-body">
+    <div class="check-item" onclick="toggleCheck(this)">
+      <div class="check-box"></div>
+      <div><div class="check-text">Re-analiza: ima li novih validnih zona na 1H?</div></div>
+    </div>
+    <div class="check-item" onclick="toggleCheck(this)">
+      <div class="check-box"></div>
+      <div><div class="check-text">Ista pravila kao London — Pre-Trade Gate obavezan</div></div>
+    </div>
+    <div class="check-item" onclick="toggleCheck(this)">
+      <div class="check-box"></div>
+      <div>
+        <div class="check-text">Ako si već u gubitku danas — duplo stroži kriterijumi</div>
+        <div class="check-note">Emotivan trejder = loš trejder</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- END OF DAY -->
+<div class="phase" id="phase4">
+  <div class="phase-label" onclick="togglePhase('phase4')">
+    <span class="phase-icon">📓</span>
+    <div>
+      <div style="font-size:15px;font-weight:700">Kraj Dana — Journal</div>
+    </div>
+    <div style="margin-left:auto;display:flex;align-items:center;gap:10px">
+      <span class="section-time">17:00+</span>
+      <span class="phase-arrow">▼</span>
+    </div>
+  </div>
+  <div class="phase-body">
+    <div class="check-item" onclick="toggleCheck(this)">
+      <div class="check-box"></div>
+      <div><div class="check-text">Zatvori platformu — nema više tradinga danas</div></div>
+    </div>
+    <div class="check-item" onclick="toggleCheck(this)">
+      <div class="check-box"></div>
+      <div><div class="check-text">Upiši sve tradove u journal (uključujući preskočene)</div></div>
+    </div>
+    <div class="check-item" onclick="toggleCheck(this)">
+      <div class="check-box"></div>
+      <div>
+        <div class="check-text">Za svaki gubitak — zapiši: šta si video, šta je falilo</div>
+        <div class="check-note">Ne "bio sam glup" — konkretan tehnički razlog</div>
+      </div>
+    </div>
+    <div class="check-item" onclick="toggleCheck(this)">
+      <div class="check-box"></div>
+      <div><div class="check-text">Oceni dan: disciplina 1-10, emotivno stanje 1-10</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- GOLDEN RULES -->
+<div style="margin-top:28px">
+  <div class="section-header">
+    <span class="section-title">Zlatna Pravila</span>
+  </div>
+  <div class="rules-block">
+    <div class="rule-item">
+      <span class="rule-num">01</span>
+      <span>TP mora imati razlog. Uvek. Bez izuzetka.</span>
+    </div>
+    <div class="rule-item">
+      <span class="rule-num">02</span>
+      <span>Ako je cena prošla 5+ pips od entry zone — preskačeš, ne juriš.</span>
+    </div>
+    <div class="rule-item">
+      <span class="rule-num">03</span>
+      <span>Dostignut max daily loss = platforma se zatvara. Nema izuzetka.</span>
+    </div>
+    <div class="rule-item">
+      <span class="rule-num">04</span>
+      <span>U pauzi (10:30-13:00) ne otvaraš chart ni na telefonu.</span>
+    </div>
+    <div class="rule-item">
+      <span class="rule-num">05</span>
+      <span>Preskočen trade koji bi bio gubitak = dobijen novac. Zapisuješ ga.</span>
+    </div>
+    <div class="rule-item">
+      <span class="rule-num">06</span>
+      <span>Posle 2 uzastopna gubitka u istom danu — stani, pauza 1 sat minimum.</span>
+    </div>
+  </div>
+</div>
+
+<button class="reset-btn" onclick="resetAll()">↺ RESETUJ DAN</button>
+
+<div class="footer">
+  MBT · S&D System · 1H Supply & Demand · M1 Entry<br>
+  <span style="color:#333">Napravljeno za konzistentnost, ne za uzbuđenje</span>
+</div>
+
+<script>
+  // Date
+  const days = ['Nedelja','Ponedeljak','Utorak','Sreda','Četvrtak','Petak','Subota'];
+  const months = ['Jan','Feb','Mar','Apr','Maj','Jun','Jul','Avg','Sep','Okt','Nov','Dec'];
+  const now = new Date();
+  document.getElementById('dateDisplay').textContent =
+    `${days[now.getDay()]}, ${now.getDate()} ${months[now.getMonth()]} ${now.getFullYear()}`;
+
+  // Phase toggle
+  function togglePhase(id) {
+    const el = document.getElementById(id);
+    el.classList.toggle('open');
+  }
+
+  // Open first phase by default
+  document.getElementById('phase1').classList.add('open');
+
+  // Check items
+  function toggleCheck(el) {
+    el.classList.toggle('checked');
+    updateProgress();
+  }
+
+  // Gate items
+  function toggleGate(el) {
+    if (el.classList.contains('checked')) {
+      el.classList.remove('checked');
+    } else {
+      el.classList.add('checked');
+    }
+    updateGateVerdict();
+    updateProgress();
+  }
+
+  function updateGateVerdict() {
+    const items = document.querySelectorAll('.gate-item');
+    const total = items.length;
+    const checked = document.querySelectorAll('.gate-item.checked').length;
+    const verdict = document.getElementById('gateVerdict');
+
+    if (checked === 0) {
+      verdict.className = 'gate-verdict neutral';
+      verdict.textContent = 'POPUNI CHECKLIST';
+    } else if (checked === total) {
+      verdict.className = 'gate-verdict go';
+      verdict.textContent = '✓ ULAZ DOZVOLJEN';
+    } else {
+      verdict.className = 'gate-verdict no-go';
+      verdict.textContent = `✗ ČEKAJ — ${total - checked} uslova nisu ispunjena`;
+    }
+  }
+
+  // Progress
+  function updateProgress() {
+    const allChecks = document.querySelectorAll('.check-item, .gate-item');
+    const checked = document.querySelectorAll('.check-item.checked, .gate-item.checked');
+    const total = allChecks.length;
+    const done = checked.length;
+    document.getElementById('progressText').textContent = `${done} / ${total}`;
+    document.getElementById('progressFill').style.width = total > 0 ? `${(done/total)*100}%` : '0%';
+  }
+
+  // Calc
+  function calcLoss() {
+    const cap = parseFloat(document.getElementById('capital').value);
+    const pct = parseFloat(document.getElementById('riskPct').value);
+    const el = document.getElementById('maxLoss');
+    const pt = document.getElementById('perTrade');
+    if (!isNaN(cap) && !isNaN(pct)) {
+      const loss = (cap * pct / 100).toFixed(2);
+      const perTrade = (cap * 0.005).toFixed(2);
+      el.textContent = `-€${loss}`;
+      pt.textContent = `€${perTrade}`;
+    } else {
+      el.textContent = '—';
+      pt.textContent = '—';
+    }
+  }
+  calcLoss();
+
+  // Position Size Calculator
+  // Pip values per lot in USD (for standard 100,000 lot)
+  // For JPY pairs: pip = 0.01, others: pip = 0.0001
+  // Gold: pip = 0.1 (per oz), contract size 100oz
+  // Silver: pip = 0.001, contract 5000oz
+
+  // Fixed pip values per lot in USD (aproksimacija, dovoljno precizna za position sizing)
+  const fixedPipValues = {
+    // Majors
+    'EURUSD': 10.00,
+    'GBPUSD': 10.00,
+    'AUDUSD': 10.00,
+    'NZDUSD': 10.00,
+    'USDCAD': 7.30,
+    'USDCHF': 11.20,
+    'USDJPY': 9.10,
+    // EUR crosses
+    'EURGBP': 12.60,
+    'EURJPY': 6.50,
+    'EURCAD': 7.30,
+    'EURCHF': 11.20,
+    'EURAUD': 6.40,
+    'EURNZD': 5.90,
+    // GBP crosses
+    'GBPJPY': 6.50,
+    'GBPAUD': 6.40,
+    'GBPCAD': 7.30,
+    'GBPCHF': 11.20,
+    'GBPNZD': 5.90,
+    // AUD crosses
+    'AUDJPY': 6.50,
+    'AUDCAD': 7.30,
+    'AUDCHF': 11.20,
+    'AUDNZD': 5.90,
+    // Other crosses
+    'CADJPY': 6.50,
+    'CHFJPY': 6.50,
+    'NZDJPY': 6.50,
+    // Metali
+    'XAUUSD': 10.00,
+    'XAGUSD': 5.00,
+  };
+
+  function calcSize() {
+    const pair = document.getElementById('pairSelect').value;
+    const slPips = parseFloat(document.getElementById('slPips').value);
+    const riskAmt = parseFloat(document.getElementById('riskAmount').value);
+
+    const lotSizeEl = document.getElementById('lotSize');
+    const pipValEl = document.getElementById('pipValue');
+    const noteEl = document.getElementById('sizeNote');
+
+    const pipVal = fixedPipValues[pair] || 10;
+
+    pipValEl.textContent = `$${pipVal.toFixed(2)} / lot`;
+
+    if (isNaN(slPips) || isNaN(riskAmt) || slPips <= 0 || riskAmt <= 0) {
+      lotSizeEl.textContent = '—';
+      noteEl.textContent = 'Unesi SL i rizik';
+      return;
+    }
+
+    const lotSize = riskAmt / (slPips * pipVal);
+    lotSizeEl.textContent = `${lotSize.toFixed(2)} lot`;
+    noteEl.textContent = `${slPips} pips × $${pipVal.toFixed(2)} × ${lotSize.toFixed(2)} lot ≈ $${(slPips * pipVal * lotSize).toFixed(2)} rizik`;
+  }
+
+  // Auto-fill risk amount from capital calc
+  function syncRiskAmount() {
+    const cap = parseFloat(document.getElementById('capital').value);
+    if (!isNaN(cap)) {
+      const risk = (cap * 0.005).toFixed(0);
+      document.getElementById('riskAmount').placeholder = risk;
+      if (!document.getElementById('riskAmount').value) {
+        document.getElementById('riskAmount').value = risk;
+        calcSize();
+      }
+    }
+  }
+
+  // Override calcLoss to also sync
+  const origCalcLoss = calcLoss;
+  document.getElementById('capital').addEventListener('input', syncRiskAmount);
+  syncRiskAmount();
+
+  calcSize();
+
+  function resetAll() {
+    if (!confirm('Resetovati sve checkboxove za novi dan?')) return;
+    document.querySelectorAll('.check-item').forEach(el => el.classList.remove('checked'));
+    document.querySelectorAll('.gate-item').forEach(el => {
+      el.classList.remove('checked');
+      el.classList.remove('blocked');
+    });
+    updateGateVerdict();
+    updateProgress();
+  }
+
+  updateProgress();
+</script>
+</body>
+</html>
