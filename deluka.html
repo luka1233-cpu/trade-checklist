@@ -1,0 +1,989 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Deluka — Trading Intelligence</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:      #080c10;
+  --bg2:     #0d1117;
+  --bg3:     #121920;
+  --bg4:     #172030;
+  --border:  rgba(255,255,255,0.055);
+  --border2: rgba(255,255,255,0.10);
+  --accent:  #3b82f6;
+  --accent2: #60a5fa;
+  --green:   #10b981;
+  --red:     #f43f5e;
+  --yellow:  #f59e0b;
+  --purple:  #8b5cf6;
+  --text:    #dde6f0;
+  --text2:   #6b7f99;
+  --text3:   #2e3f52;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{height:100%;overflow:hidden;}
+body{
+  background:var(--bg);
+  color:var(--text);
+  font-family:'Syne',sans-serif;
+  display:flex;
+  height:100vh;
+}
+
+/* ── SIDEBAR ── */
+.sidebar{
+  width:200px;min-width:200px;
+  background:var(--bg2);
+  border-right:1px solid var(--border);
+  display:flex;flex-direction:column;
+  height:100vh;
+}
+.logo{
+  padding:22px 20px 18px;
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:10px;
+}
+.logo-mark{
+  width:28px;height:28px;
+  background:var(--accent);
+  border-radius:6px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:13px;font-weight:800;color:#fff;
+  font-family:'DM Mono',monospace;
+}
+.logo-name{
+  font-size:15px;font-weight:700;
+  letter-spacing:2px;
+  text-transform:uppercase;
+}
+.nav{flex:1;padding:10px 0;overflow-y:auto;}
+.nav-item{
+  display:flex;align-items:center;gap:9px;
+  padding:9px 14px;
+  font-size:12px;font-weight:500;
+  color:var(--text2);
+  cursor:pointer;
+  border-radius:6px;
+  margin:1px 8px;
+  transition:all .15s;
+  letter-spacing:.3px;
+}
+.nav-item:hover{background:var(--bg3);color:var(--text);}
+.nav-item.active{background:var(--bg4);color:var(--text);border-left:2px solid var(--accent);}
+.nav-item svg{width:14px;height:14px;flex-shrink:0;}
+.nav-divider{height:1px;background:var(--border);margin:8px 14px;}
+.nav-badge{
+  margin-left:auto;background:var(--red);color:#fff;
+  font-size:9px;font-weight:700;
+  width:16px;height:16px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+}
+
+/* ── MAIN ── */
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden;}
+
+/* ── PAGE HEADER ── */
+.page-header{
+  padding:14px 24px;
+  border-bottom:1px solid var(--border);
+  background:var(--bg2);
+  display:flex;align-items:center;justify-content:space-between;
+  flex-shrink:0;
+}
+.page-title{font-size:18px;font-weight:700;letter-spacing:-.3px;}
+.page-sub{font-size:11px;color:var(--text2);margin-top:1px;}
+.header-right{display:flex;align-items:center;gap:10px;}
+.live-pill{
+  display:flex;align-items:center;gap:5px;
+  background:rgba(16,185,129,.1);
+  border:1px solid rgba(16,185,129,.25);
+  color:var(--green);
+  font-size:9px;font-weight:700;
+  padding:3px 10px;border-radius:20px;
+  letter-spacing:1px;text-transform:uppercase;
+  font-family:'DM Mono',monospace;
+}
+.live-dot{width:5px;height:5px;background:var(--green);border-radius:50%;animation:blink 1.2s infinite;}
+@keyframes blink{0%,100%{opacity:1;}50%{opacity:.2;}}
+
+/* ── PAGE CONTENT ── */
+.page{display:none;flex:1;overflow:hidden;}
+.page.active{display:flex;flex-direction:column;}
+
+/* ── NEWS FEED ── */
+.news-filters{
+  display:flex;gap:0;padding:0 20px;
+  border-bottom:1px solid var(--border);
+  background:var(--bg2);flex-shrink:0;
+}
+.nf{
+  padding:10px 14px;font-size:11px;font-weight:500;
+  color:var(--text2);cursor:pointer;
+  border-bottom:2px solid transparent;
+  transition:all .15s;display:flex;align-items:center;gap:5px;
+  white-space:nowrap;
+}
+.nf:hover{color:var(--text);}
+.nf.active{color:var(--text);border-bottom-color:var(--accent);}
+.nf .dot{width:6px;height:6px;border-radius:50%;background:var(--red);}
+.nf .bolt{color:var(--yellow);}
+
+.news-body{flex:1;overflow-y:auto;padding:0;}
+.news-body::-webkit-scrollbar{width:3px;}
+.news-body::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px;}
+
+.news-item{
+  display:grid;grid-template-columns:6px 1fr auto;
+  gap:12px;align-items:start;
+  padding:16px 20px;
+  border-bottom:1px solid var(--border);
+  transition:background .15s;
+}
+.news-item:hover{background:var(--bg3);}
+.news-dot-col{padding-top:5px;}
+.news-dot{
+  width:6px;height:6px;border-radius:50%;
+  background:var(--text3);
+}
+.news-dot.live{background:var(--red);animation:pulse-d 1.5s infinite;}
+@keyframes pulse-d{
+  0%,100%{box-shadow:0 0 0 0 rgba(244,63,94,.4);}
+  50%{box-shadow:0 0 0 5px rgba(244,63,94,0);}
+}
+.news-time{font-size:10px;color:var(--text3);margin-bottom:4px;font-family:'DM Mono',monospace;}
+.news-hl{font-size:13px;font-weight:500;line-height:1.45;color:var(--text);margin-bottom:4px;}
+.news-sum{font-size:11px;color:var(--text2);line-height:1.5;}
+.news-acts{display:flex;flex-direction:column;gap:5px;flex-shrink:0;}
+.act-btn{
+  width:26px;height:26px;display:flex;align-items:center;justify-content:center;
+  color:var(--text3);cursor:pointer;border-radius:5px;font-size:13px;
+  transition:all .15s;
+}
+.act-btn:hover{color:var(--text2);background:var(--bg4);}
+.act-btn.brain:hover{color:var(--purple);}
+
+/* AI PANEL */
+.ai-panel{
+  display:none;
+  margin:0 18px 14px;
+  background:var(--bg3);
+  border:1px solid rgba(139,92,246,.2);
+  border-radius:8px;padding:14px;
+  animation:fadeUp .2s ease;
+}
+@keyframes fadeUp{from{opacity:0;transform:translateY(-6px);}to{opacity:1;transform:translateY(0);}}
+.ai-panel.open{display:block;}
+.ai-ph{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+.ai-pt{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:#a78bfa;}
+.ai-close{color:var(--text3);cursor:pointer;font-size:13px;transition:color .15s;}
+.ai-close:hover{color:var(--text2);}
+.ai-spin-wrap{display:flex;align-items:center;gap:7px;font-size:11px;color:var(--text3);}
+.ai-spinner{width:11px;height:11px;border:1px solid var(--border2);border-top-color:var(--purple);border-radius:50%;animation:spin .7s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.ai-text{font-size:11px;color:var(--text2);line-height:1.65;margin-bottom:12px;display:none;}
+.ai-tags{display:flex;flex-wrap:wrap;gap:6px;}
+.ai-tag{
+  display:flex;align-items:center;gap:4px;
+  padding:3px 10px;border-radius:20px;
+  font-size:10px;font-weight:600;
+  font-family:'DM Mono',monospace;border:1px solid;
+}
+.ai-tag.bull{background:rgba(16,185,129,.08);border-color:rgba(16,185,129,.3);color:var(--green);}
+.ai-tag.bear{background:rgba(244,63,94,.08);border-color:rgba(244,63,94,.3);color:var(--red);}
+.ai-tag.neut{background:rgba(245,158,11,.08);border-color:rgba(245,158,11,.3);color:var(--yellow);}
+
+/* ── CALENDAR ── */
+.cal-body{flex:1;overflow-y:auto;padding:20px;}
+.cal-body::-webkit-scrollbar{width:3px;}
+.cal-body::-webkit-scrollbar-thumb{background:var(--border2);}
+.cal-section-title{
+  font-size:10px;letter-spacing:2px;text-transform:uppercase;
+  color:var(--text3);margin-bottom:12px;font-family:'DM Mono',monospace;
+  padding-bottom:8px;border-bottom:1px solid var(--border);
+}
+.cal-grid{display:flex;flex-direction:column;gap:8px;margin-bottom:28px;}
+.cal-row{
+  background:var(--bg2);border:1px solid var(--border);
+  border-left:3px solid transparent;border-radius:6px;
+  padding:12px 14px;
+  display:grid;grid-template-columns:90px 1fr auto;
+  gap:12px;align-items:center;
+  transition:background .15s;
+}
+.cal-row:hover{background:var(--bg3);}
+.cal-row.high{border-left-color:var(--red);}
+.cal-row.medium{border-left-color:var(--yellow);}
+.cal-row.low{border-left-color:var(--text3);}
+.cal-row.upcoming{animation:pulse-row 2.5s infinite;}
+@keyframes pulse-row{0%,100%{background:var(--bg2);}50%{background:rgba(59,130,246,.04);}}
+.cal-time{font-family:'DM Mono',monospace;font-size:11px;color:var(--accent2);}
+.cal-upcoming-tag{font-size:8px;color:var(--accent);letter-spacing:1px;text-transform:uppercase;margin-top:2px;}
+.cal-name{font-size:13px;font-weight:500;color:var(--text);margin-bottom:3px;}
+.cal-meta{font-size:10px;color:var(--text2);}
+.cal-meta span{margin-right:8px;}
+.cal-badge{
+  font-size:9px;font-weight:700;letter-spacing:.5px;
+  padding:3px 8px;border-radius:4px;text-transform:uppercase;
+  font-family:'DM Mono',monospace;
+}
+.cal-badge.high{background:rgba(244,63,94,.1);color:var(--red);border:1px solid rgba(244,63,94,.2);}
+.cal-badge.medium{background:rgba(245,158,11,.1);color:var(--yellow);border:1px solid rgba(245,158,11,.2);}
+.cal-badge.low{background:rgba(46,63,82,.3);color:var(--text3);border:1px solid var(--border);}
+
+/* ── COT ── */
+.cot-body{flex:1;overflow-y:auto;padding:20px;}
+.cot-body::-webkit-scrollbar{width:3px;}
+.cot-body::-webkit-scrollbar-thumb{background:var(--border2);}
+.cot-intro{
+  background:var(--bg2);border:1px solid var(--border);
+  border-radius:6px;padding:12px 16px;margin-bottom:20px;
+  font-size:11px;color:var(--text2);line-height:1.6;
+  display:flex;align-items:center;gap:10px;
+}
+.cot-intro strong{color:var(--text);}
+.cot-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:12px;}
+.cot-card{
+  background:var(--bg2);border:1px solid var(--border);
+  border-radius:8px;padding:16px;
+  transition:border-color .2s;
+}
+.cot-card:hover{border-color:var(--border2);}
+.cot-card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
+.cot-pair{font-size:15px;font-weight:700;font-family:'DM Mono',monospace;letter-spacing:1px;}
+.cot-signal{
+  font-size:9px;font-weight:700;letter-spacing:1px;
+  padding:3px 10px;border-radius:20px;text-transform:uppercase;
+  font-family:'DM Mono',monospace;
+}
+.cot-signal.bull{background:rgba(16,185,129,.1);color:var(--green);border:1px solid rgba(16,185,129,.25);}
+.cot-signal.bear{background:rgba(244,63,94,.1);color:var(--red);border:1px solid rgba(244,63,94,.25);}
+.cot-signal.neut{background:rgba(245,158,11,.1);color:var(--yellow);border:1px solid rgba(245,158,11,.25);}
+
+.cot-stat-row{display:flex;justify-content:space-between;gap:12px;margin-bottom:12px;}
+.cot-stat{flex:1;}
+.cot-stat-label{font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:3px;font-family:'DM Mono',monospace;}
+.cot-stat-val{font-size:15px;font-weight:700;font-family:'DM Mono',monospace;}
+.cot-stat-val.pos{color:var(--green);}
+.cot-stat-val.neg{color:var(--red);}
+.cot-stat-val.neut{color:var(--yellow);}
+.cot-stat-chg{font-size:10px;margin-top:2px;font-family:'DM Mono',monospace;}
+.cot-stat-chg.pos{color:var(--green);}
+.cot-stat-chg.neg{color:var(--red);}
+
+/* Bar */
+.cot-bar-wrap{margin-bottom:10px;}
+.cot-bar-label{display:flex;justify-content:space-between;font-size:9px;color:var(--text3);margin-bottom:4px;font-family:'DM Mono',monospace;}
+.cot-bar-track{height:4px;background:var(--bg4);border-radius:2px;overflow:hidden;position:relative;}
+.cot-bar-long{height:100%;background:var(--green);border-radius:2px;transition:width .8s ease;}
+.cot-bar-short{position:absolute;right:0;top:0;height:100%;background:var(--red);border-radius:2px;transition:width .8s ease;}
+.cot-center{width:1px;height:8px;background:var(--border2);position:absolute;left:50%;top:-2px;}
+
+.cot-note{font-size:10px;color:var(--text2);line-height:1.5;padding-top:10px;border-top:1px solid var(--border);}
+.cot-date{font-size:9px;color:var(--text3);margin-top:6px;font-family:'DM Mono',monospace;}
+
+/* ── API KEY SCREEN ── */
+.apikey-overlay{
+  position:fixed;inset:0;background:rgba(8,12,16,0.97);
+  display:flex;align-items:center;justify-content:center;
+  z-index:9999;backdrop-filter:blur(8px);
+}
+.apikey-box{
+  background:var(--bg2);border:1px solid var(--border2);
+  border-radius:12px;padding:36px 40px;width:440px;max-width:95vw;
+}
+.apikey-logo{display:flex;align-items:center;gap:10px;margin-bottom:28px;}
+.apikey-logo .logo-mark{width:32px;height:32px;font-size:15px;}
+.apikey-logo .logo-name{font-size:17px;font-weight:700;letter-spacing:2px;text-transform:uppercase;}
+.apikey-title{font-size:16px;font-weight:700;margin-bottom:8px;}
+.apikey-sub{font-size:12px;color:var(--text2);line-height:1.6;margin-bottom:24px;}
+.apikey-sub a{color:var(--accent2);text-decoration:none;}
+.apikey-sub a:hover{text-decoration:underline;}
+.apikey-label{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--text3);margin-bottom:6px;font-family:'DM Mono',monospace;}
+.apikey-input{
+  width:100%;background:var(--bg3);
+  border:1px solid var(--border2);border-radius:6px;
+  padding:10px 14px;
+  color:var(--text);font-family:'DM Mono',monospace;font-size:12px;
+  outline:none;transition:border-color .2s;
+  margin-bottom:16px;
+}
+.apikey-input:focus{border-color:var(--accent);}
+.apikey-input::placeholder{color:var(--text3);}
+.apikey-btn{
+  width:100%;padding:11px;
+  background:var(--accent);border:none;border-radius:6px;
+  color:#fff;font-family:'Syne',sans-serif;font-size:13px;font-weight:700;
+  cursor:pointer;transition:background .2s;letter-spacing:.5px;
+}
+.apikey-btn:hover{background:#2563eb;}
+.apikey-btn:disabled{background:var(--bg4);color:var(--text3);cursor:not-allowed;}
+.apikey-note{
+  margin-top:16px;font-size:10px;color:var(--text3);
+  line-height:1.6;text-align:center;
+}
+.apikey-err{
+  background:rgba(244,63,94,.08);border:1px solid rgba(244,63,94,.2);
+  border-radius:4px;padding:8px 12px;font-size:11px;color:var(--red);
+  margin-bottom:12px;display:none;
+}
+.apikey-change{
+  font-size:10px;color:var(--text3);cursor:pointer;
+  text-decoration:underline;font-family:'DM Mono',monospace;
+  background:none;border:none;padding:0;
+}
+.apikey-change:hover{color:var(--text2);}
+
+.loader{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:60px;gap:14px;color:var(--text3);
+  font-size:11px;letter-spacing:1px;text-transform:uppercase;
+  font-family:'DM Mono',monospace;
+}
+.loader-spin{
+  width:24px;height:24px;
+  border:1px solid var(--border2);border-top-color:var(--accent);
+  border-radius:50%;animation:spin .8s linear infinite;
+}
+.error-box{
+  margin:20px;background:rgba(244,63,94,.06);
+  border:1px solid rgba(244,63,94,.2);border-radius:6px;
+  padding:14px 16px;font-size:11px;color:var(--red);line-height:1.6;
+}
+</style>
+</head>
+<body>
+
+<!-- API KEY OVERLAY -->
+<div class="apikey-overlay" id="apikeyOverlay">
+  <div class="apikey-box">
+    <div class="apikey-logo">
+      <div class="logo-mark">D</div>
+      <span class="logo-name">Deluka</span>
+    </div>
+    <div class="apikey-title">Enter your API Key</div>
+    <div class="apikey-sub">
+      Deluka uses the Anthropic API to fetch live news, economic calendar, and COT data.
+      Each user needs their own key — your key is stored locally in your browser and never shared.<br><br>
+      Get a free key at <a href="https://console.anthropic.com" target="_blank">console.anthropic.com</a> — $5 credits is enough for months of use.
+    </div>
+    <div class="apikey-label">Anthropic API Key</div>
+    <div class="apikey-err" id="apikeyErr"></div>
+    <input class="apikey-input" id="apikeyInput" type="password" placeholder="sk-ant-api03-..." autocomplete="off" spellcheck="false"/>
+    <button class="apikey-btn" id="apikeyBtn" onclick="submitApiKey()">Enter Deluka →</button>
+    <div class="apikey-note">
+      Your key is saved in localStorage — you only need to enter it once per device.<br>
+      It is never sent anywhere except directly to api.anthropic.com.
+    </div>
+  </div>
+</div>
+
+<!-- SIDEBAR -->
+<nav class="sidebar">
+  <div class="logo">
+    <div class="logo-mark">D</div>
+    <span class="logo-name">Deluka</span>
+  </div>
+  <div class="nav">
+    <div class="nav-item active" onclick="showPage('news',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="2" fill="currentColor"/><path d="M12 2v3M12 19v3M4.22 4.22l2.12 2.12M17.66 17.66l2.12 2.12M2 12h3M19 12h3M4.22 19.78l2.12-2.12M17.66 6.34l2.12-2.12"/></svg>
+      News Feed
+      <span class="nav-badge" id="newsBadge" style="display:none">!</span>
+    </div>
+    <div class="nav-item" onclick="showPage('calendar',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+      Economic Calendar
+    </div>
+    <div class="nav-item" onclick="showPage('cot',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+      COT Report
+    </div>
+    <div class="nav-divider"></div>
+    <div class="nav-item" onclick="changeApiKey()" style="color:var(--text3);">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+      Change API Key
+    </div>
+  </div>
+</nav>
+
+<!-- MAIN -->
+<div class="main">
+
+  <!-- ── NEWS PAGE ── -->
+  <div class="page active" id="page-news">
+    <div class="page-header">
+      <div>
+        <div class="page-title">Live News</div>
+        <div class="page-sub">Real-time market headlines</div>
+      </div>
+      <div class="header-right">
+        <span style="font-size:11px;color:var(--text3);font-family:'DM Mono',monospace;" id="newsCount">—</span>
+        <div class="live-pill"><div class="live-dot"></div>Live</div>
+      </div>
+    </div>
+    <div class="news-filters">
+      <div class="nf active" onclick="setFilter('all',this)">All</div>
+      <div class="nf" onclick="setFilter('breaking',this)"><span class="dot"></span> Breaking</div>
+      <div class="nf" onclick="setFilter('high',this)"><span class="bolt">⚡</span> High Impact</div>
+      <div class="nf" onclick="setFilter('econ',this)">🏛 Economic Data</div>
+    </div>
+    <div class="news-body" id="newsFeed">
+      <div class="loader"><div class="loader-spin"></div>Fetching live news...</div>
+    </div>
+  </div>
+
+  <!-- ── CALENDAR PAGE ── -->
+  <div class="page" id="page-calendar">
+    <div class="page-header">
+      <div>
+        <div class="page-title">Economic Calendar</div>
+        <div class="page-sub" id="calDate">Today's events</div>
+      </div>
+      <div class="header-right">
+        <div class="live-pill"><div class="live-dot"></div>Live</div>
+      </div>
+    </div>
+    <div class="cal-body" id="calFeed">
+      <div class="loader"><div class="loader-spin"></div>Fetching calendar...</div>
+    </div>
+  </div>
+
+  <!-- ── COT PAGE ── -->
+  <div class="page" id="page-cot">
+    <div class="page-header">
+      <div>
+        <div class="page-title">COT Report</div>
+        <div class="page-sub">CFTC Commitments of Traders — Large Speculators</div>
+      </div>
+      <div class="header-right">
+        <span style="font-size:10px;color:var(--text3);font-family:'DM Mono',monospace;" id="cotWeek">—</span>
+        <div class="live-pill"><div class="live-dot"></div>Live</div>
+      </div>
+    </div>
+    <div class="cot-body" id="cotFeed">
+      <div class="loader"><div class="loader-spin"></div>Fetching COT data...</div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ── API KEY ───────────────────────────────
+const KEY_NS='deluka_apikey';
+
+function getApiKey(){
+  return localStorage.getItem(KEY_NS)||'';
+}
+
+function submitApiKey(){
+  const input=document.getElementById('apikeyInput');
+  const err=document.getElementById('apikeyErr');
+  const btn=document.getElementById('apikeyBtn');
+  const key=(input.value||'').trim();
+
+  if(!key.startsWith('sk-ant-')){
+    err.textContent='Invalid key format. Should start with sk-ant-...';
+    err.style.display='block';
+    return;
+  }
+
+  btn.disabled=true;
+  btn.textContent='Verifying...';
+  err.style.display='none';
+
+  // Quick verify call
+  fetch("https://api.anthropic.com/v1/messages",{
+    method:"POST",
+    headers:{"Content-Type":"application/json","x-api-key":key,"anthropic-version":"2023-06-01"},
+    body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:10,messages:[{role:"user",content:"hi"}]})
+  }).then(r=>r.json()).then(d=>{
+    if(d.error&&d.error.type!=='invalid_request_error'){
+      throw new Error(d.error.message||'Invalid key');
+    }
+    localStorage.setItem(KEY_NS,key);
+    document.getElementById('apikeyOverlay').style.display='none';
+    fetchNews();
+    setInterval(fetchNews,30*60*1000); // 30 min auto refresh
+  }).catch(e=>{
+    err.textContent='Could not verify key: '+e.message;
+    err.style.display='block';
+    btn.disabled=false;
+    btn.textContent='Enter Deluka →';
+  });
+}
+
+function changeApiKey(){
+  localStorage.removeItem(KEY_NS);
+  document.getElementById('apikeyOverlay').style.display='flex';
+  document.getElementById('apikeyInput').value='';
+}
+
+// Enter key support
+document.addEventListener('DOMContentLoaded',()=>{
+  document.getElementById('apikeyInput').addEventListener('keydown',e=>{
+    if(e.key==='Enter')submitApiKey();
+  });
+  // Check if key already saved
+  if(getApiKey()){
+    document.getElementById('apikeyOverlay').style.display='none';
+    fetchNews();
+    setInterval(fetchNews,30*60*1000);
+  }
+});
+
+
+const NS = 'deluka_news_v1';
+const MAX_AGE = 48*3600*1000;
+
+function loadHistory(){
+  try{
+    const r=localStorage.getItem(NS);
+    if(!r)return[];
+    return JSON.parse(r).filter(n=>n._ts&&n._ts>Date.now()-MAX_AGE);
+  }catch(e){return[];}
+}
+function saveHistory(fresh){
+  const ex=loadHistory();
+  const titles=new Set(ex.map(n=>n.title));
+  const merged=[...fresh.filter(n=>!titles.has(n.title)).map(n=>({...n,_ts:Date.now()})),...ex];
+  try{localStorage.setItem(NS,JSON.stringify(merged));}catch(e){}
+  return merged;
+}
+function age(ts){
+  if(!ts)return'just now';
+  const d=Date.now()-ts,h=Math.floor(d/3600000),m=Math.floor((d%3600000)/60000);
+  if(h>=24)return Math.floor(h/24)+'d ago';
+  if(h>0)return h+'h '+m+'m ago';
+  if(m>0)return m+'m ago';
+  return'just now';
+}
+
+// ── NAV ──────────────────────────────────
+function showPage(id, el){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  el.classList.add('active');
+  if(id==='calendar'&&!calLoaded){fetchCalendar();calLoaded=true;}
+  if(id==='cot'&&!cotLoaded){fetchCOT();cotLoaded=true;}
+}
+let calLoaded=false,cotLoaded=false;
+
+// ── FILTER ───────────────────────────────
+let currentFilter='all';
+let allNews=[];
+
+function setFilter(f,el){
+  currentFilter=f;
+  document.querySelectorAll('.nf').forEach(x=>x.classList.remove('active'));
+  el.classList.add('active');
+  renderNews(allNews);
+}
+
+// ── AI PANEL ─────────────────────────────
+let openAI=null;
+function closeAI(){
+  document.querySelectorAll('.ai-panel').forEach(p=>p.classList.remove('open'));
+  openAI=null;
+}
+function toggleAI(idx){
+  const p=document.getElementById('ai-'+idx);
+  if(!p)return;
+  if(p.classList.contains('open')){closeAI();return;}
+  closeAI();
+  p.classList.add('open');
+  openAI=idx;
+  if(!p.dataset.done){
+    p.dataset.done='1';
+    const item=allNews[idx];
+    fetchAI(idx,item);
+  }
+}
+
+async function fetchAI(idx,item){
+  const prompt=`You are a professional forex market analyst. Analyze this news:
+
+HEADLINE: "${item.title}"
+CONTEXT: "${item.summary||''}"
+
+Return ONLY a JSON object:
+{
+  "analysis": "2-3 sentences on forex market impact. Be specific: central bank implications, risk sentiment, USD impact, which currencies benefit or suffer",
+  "pairs": [{"pair":"EUR/USD","direction":"bullish|bearish|neutral"},{"pair":"GBP/USD","direction":"..."},{"pair":"USD/JPY","direction":"..."},{"pair":"XAU/USD","direction":"..."},{"pair":"AUD/USD","direction":"..."}]
+}
+
+Include only pairs that are meaningfully impacted. No markdown, no backticks.`;
+
+  try{
+    const res=await fetch("https://api.anthropic.com/v1/messages",{
+      method:"POST",headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:1000,messages:[{role:"user",content:prompt}]})
+    });
+    const d=await res.json();
+    const txt=(d.content||[]).filter(b=>b.type==='text').map(b=>b.text).join('');
+    const m=txt.replace(/```json|```/g,'').trim().match(/\{[\s\S]*\}/);
+    if(!m)throw new Error();
+    const parsed=JSON.parse(m[0]);
+    const spin=document.getElementById('ai-spin-'+idx);
+    const text=document.getElementById('ai-text-'+idx);
+    const tags=document.getElementById('ai-tags-'+idx);
+    if(spin)spin.style.display='none';
+    if(text){text.style.display='block';text.textContent=parsed.analysis||'';}
+    if(tags){
+      tags.innerHTML=(parsed.pairs||[]).map(p=>{
+        const cls=p.direction==='bullish'?'bull':p.direction==='bearish'?'bear':'neut';
+        const arr=p.direction==='bullish'?'↗':p.direction==='bearish'?'↘':'→';
+        return`<span class="ai-tag ${cls}">${arr} ${p.pair}</span>`;
+      }).join('');
+    }
+  }catch(e){
+    const spin=document.getElementById('ai-spin-'+idx);
+    const text=document.getElementById('ai-text-'+idx);
+    if(spin)spin.style.display='none';
+    if(text){text.style.display='block';text.textContent='Analysis unavailable.';}
+  }
+}
+
+// ── RENDER NEWS ───────────────────────────
+function renderNews(items){
+  const feed=document.getElementById('newsFeed');
+  let filtered=items;
+  if(currentFilter==='breaking')filtered=items.filter(i=>i._ts&&Date.now()-i._ts<15*60000);
+  else if(currentFilter==='high')filtered=items.filter(i=>(i.impact||'').toUpperCase()==='HIGH');
+  else if(currentFilter==='econ')filtered=items.filter(i=>{
+    const t=(i.title||'').toLowerCase();
+    return t.includes('gdp')||t.includes('cpi')||t.includes('nfp')||t.includes('rate')||t.includes('inflation')||t.includes('pmi')||t.includes('fomc')||t.includes('ecb')||t.includes('payroll');
+  });
+
+  if(!filtered.length){
+    feed.innerHTML=`<div class="loader" style="color:var(--text3)">No items in this category</div>`;
+    return;
+  }
+
+  document.getElementById('newsCount').textContent=items.length+' articles (48h)';
+
+  feed.innerHTML=filtered.map((item,idx)=>{
+    const isNew=item._ts&&Date.now()-item._ts<5*60000;
+    return`
+    <div class="news-item">
+      <div class="news-dot-col"><div class="news-dot${isNew?' live':''}"></div></div>
+      <div>
+        <div class="news-time">${age(item._ts)||item.time||''}</div>
+        <div class="news-hl">${item.title||''}</div>
+        <div class="news-sum">${item.summary||''}</div>
+      </div>
+      <div class="news-acts">
+        <div class="act-btn" title="Bookmark">🔖</div>
+        <div class="act-btn brain" title="AI Analysis" onclick="toggleAI(${idx})">🧠</div>
+      </div>
+    </div>
+    <div class="ai-panel" id="ai-${idx}">
+      <div class="ai-ph">
+        <div class="ai-pt">🧠 Deluka AI Analysis</div>
+        <div class="ai-close" onclick="closeAI()">✕</div>
+      </div>
+      <div class="ai-spin-wrap" id="ai-spin-${idx}"><div class="ai-spinner"></div>Analyzing market impact...</div>
+      <div class="ai-text" id="ai-text-${idx}"></div>
+      <div class="ai-tags" id="ai-tags-${idx}"></div>
+    </div>`;
+  }).join('');
+}
+
+// ── API HELPER ────────────────────────────
+async function callWithSearch(userPrompt, maxTokens=4000){
+  const key=getApiKey();
+  const headers={"Content-Type":"application/json","anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true"};
+  if(key)headers["x-api-key"]=key;
+
+  const res=await fetch("https://api.anthropic.com/v1/messages",{
+    method:"POST",headers,
+    body:JSON.stringify({
+      model:"claude-sonnet-4-20250514",
+      max_tokens:maxTokens,
+      tools:[{type:"web_search_20250305",name:"web_search"}],
+      messages:[{role:"user",content:userPrompt}]
+    })
+  });
+  const d=await res.json();
+  if(d.error)throw new Error(JSON.stringify(d.error));
+
+  let txt=(d.content||[]).filter(b=>b.type==='text').map(b=>b.text).join('');
+
+  const toolUseBlocks=(d.content||[]).filter(b=>b.type==='tool_use');
+  if(toolUseBlocks.length&&!txt.trim()){
+    const messages=[
+      {role:"user",content:userPrompt},
+      {role:"assistant",content:d.content},
+      {role:"user",content:toolUseBlocks.map(tb=>({
+        type:"tool_result",tool_use_id:tb.id,
+        content:"Search completed. Now return the JSON as instructed."
+      }))}
+    ];
+    const res2=await fetch("https://api.anthropic.com/v1/messages",{
+      method:"POST",headers,
+      body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:maxTokens,tools:[{type:"web_search_20250305",name:"web_search"}],messages})
+    });
+    const d2=await res2.json();
+    if(d2.error)throw new Error(JSON.stringify(d2.error));
+    txt=(d2.content||[]).filter(b=>b.type==='text').map(b=>b.text).join('');
+  }
+
+  if(!txt.includes('{')){
+    const res3=await fetch("https://api.anthropic.com/v1/messages",{
+      method:"POST",headers,
+      body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:maxTokens,
+        messages:[{role:"user",content:userPrompt+"\n\nIMPORTANT: Return ONLY the JSON, nothing else."}]})
+    });
+    const d3=await res3.json();
+    if(d3.error)throw new Error(JSON.stringify(d3.error));
+    txt=(d3.content||[]).filter(b=>b.type==='text').map(b=>b.text).join('');
+  }
+
+  return txt;
+}
+
+// ── FETCH NEWS ────────────────────────────
+async function fetchNews(){
+  const history=loadHistory();
+  if(history.length){allNews=history;renderNews(history);}
+
+  const today=new Date().toISOString().split('T')[0];
+  const prompt=`Search the web for the latest forex and macro financial news from today ${today}. Look for headlines from Reuters, Bloomberg, ForexFactory, FXStreet, and major financial outlets.
+
+After searching, return ONLY a JSON array of 10-12 news items. Each item:
+{
+  "title": "full headline",
+  "source": "Reuters|Bloomberg|etc",
+  "impact": "HIGH|MEDIUM|LOW",
+  "summary": "1 sentence explaining WHY this matters for forex markets"
+}
+
+Return ONLY the JSON array. No markdown, no explanation, no backticks.`;
+
+  try{
+    const txt=await callWithSearch(prompt);
+    const m=txt.replace(/```json|```/g,'').trim().match(/\[[\s\S]*\]/);
+    if(!m)throw new Error('No JSON array found');
+    const items=JSON.parse(m[0]);
+    if(!items.length)throw new Error('Empty array');
+    allNews=saveHistory(items);
+    renderNews(allNews);
+  }catch(e){
+    console.error('fetchNews:',e);
+    if(!allNews.length)
+      document.getElementById('newsFeed').innerHTML=`<div class="error-box">⚠ Failed to fetch news. Will retry in 60s.<br><small>${e.message}</small></div>`;
+  }
+}
+
+// ── FETCH CALENDAR ────────────────────────
+async function fetchCalendar(){
+  const today=new Date();
+  const dateStr=today.toISOString().split('T')[0];
+  document.getElementById('calDate').textContent=today.toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+
+  const prompt=`Search for today's (${dateStr}) forex economic calendar events. Use ForexFactory or Investing.com economic calendar as source.
+
+Return a JSON object with:
+{
+  "date": "${dateStr}",
+  "events": [
+    {
+      "time": "HH:MM UTC",
+      "currency": "USD",
+      "name": "event name",
+      "impact": "HIGH"|"MEDIUM"|"LOW",
+      "forecast": "value or null",
+      "previous": "value or null",
+      "actual": "value or null (if released)",
+      "upcoming": true/false,
+      "why": "1 sentence: why this event matters for forex and which pairs it moves"
+    }
+  ]
+}
+
+Include ALL impact levels. Sort by time. Only JSON, no markdown.`;
+
+  try{
+    const txt=await callWithSearch(prompt);
+    console.log('Calendar raw response:', txt.slice(0,500));
+    const m=txt.replace(/```json|```/g,'').trim().match(/\{[\s\S]*\}/);
+    if(!m)throw new Error('No JSON found. Response: '+txt.slice(0,200));
+    const data=JSON.parse(m[0]);
+    renderCalendar(data.events||[]);
+  }catch(e){
+    console.error('Calendar error:',e);
+    calLoaded=false; // allow retry on next click
+    document.getElementById('calFeed').innerHTML=`<div class="error-box">⚠ Failed to fetch calendar.<br><small>${e.message}</small><br><br><button onclick="calLoaded=false;fetchCalendar();calLoaded=true;" style="margin-top:8px;background:var(--bg4);border:1px solid var(--border2);color:var(--text2);padding:6px 14px;cursor:pointer;font-family:inherit;font-size:11px;border-radius:4px;">↻ Retry</button></div>`;
+  }
+}
+
+function renderCalendar(events){
+  const feed=document.getElementById('calFeed');
+  if(!events.length){feed.innerHTML=`<div class="loader" style="color:var(--text3)">No events found for today.</div>`;return;}
+
+  const upcoming=events.filter(e=>e.upcoming);
+  const released=events.filter(e=>!e.upcoming);
+
+  let html='';
+
+  if(upcoming.length){
+    html+=`<div class="cal-section-title">⏳ Upcoming Events</div><div class="cal-grid">`;
+    html+=upcoming.map(e=>renderCalRow(e)).join('');
+    html+=`</div>`;
+  }
+  if(released.length){
+    html+=`<div class="cal-section-title">✓ Released</div><div class="cal-grid">`;
+    html+=released.map(e=>renderCalRow(e)).join('');
+    html+=`</div>`;
+  }
+  feed.innerHTML=html;
+}
+
+function renderCalRow(e){
+  const ic=e.impact.toLowerCase();
+  const upTag=e.upcoming?`<div class="cal-upcoming-tag">◉ UPCOMING</div>`:'';
+  const actual=e.actual?`<span>Actual: <strong style="color:var(--text)">${e.actual}</strong></span>`:'';
+  const forecast=e.forecast?`<span>Fcst: ${e.forecast}</span>`:'';
+  const prev=e.previous?`<span>Prev: ${e.previous}</span>`:'';
+  return`
+  <div class="cal-row ${ic} ${e.upcoming?'upcoming':''}">
+    <div>
+      <div class="cal-time">${e.time}</div>
+      <div style="font-size:11px;color:var(--text2);margin-top:2px;">${e.currency}</div>
+      ${upTag}
+    </div>
+    <div>
+      <div class="cal-name">${e.name}</div>
+      <div class="cal-meta">${actual}${forecast}${prev}</div>
+      ${e.why?`<div style="font-size:10px;color:var(--text3);margin-top:4px;font-style:italic">${e.why}</div>`:''}
+    </div>
+    <div><span class="cal-badge ${ic}">${e.impact}</span></div>
+  </div>`;
+}
+
+// ── FETCH COT ─────────────────────────────
+async function fetchCOT(){
+  const prompt=`Search for the latest CFTC Commitments of Traders (COT) report data for forex futures. Use the most recent weekly report available (usually released Friday for the Tuesday data).
+
+Return a JSON object:
+{
+  "reportDate": "date string e.g. April 22, 2026",
+  "publishedDate": "April 25, 2026",
+  "pairs": [
+    {
+      "pair": "EUR/USD",
+      "currency": "Euro",
+      "netLong": 95000,
+      "netChange": 16000,
+      "grossLong": 180000,
+      "grossShort": 85000,
+      "signal": "bullish|bearish|neutral",
+      "sentiment": "Net Long|Net Short|Neutral",
+      "note": "1-2 sentences interpreting what this positioning means for price direction"
+    }
+  ]
+}
+
+Include: EUR/USD, GBP/USD, USD/JPY, AUD/USD, USD/CHF, XAU/USD (Gold), NZD/USD, USD/CAD.
+Use real numbers from the latest CFTC report. Only JSON, no markdown.`;
+
+  try{
+    const txt=await callWithSearch(prompt);
+    console.log('COT raw response:', txt.slice(0,500));
+    const m=txt.replace(/```json|```/g,'').trim().match(/\{[\s\S]*\}/);
+    if(!m)throw new Error('No JSON found. Response: '+txt.slice(0,200));
+    const data=JSON.parse(m[0]);
+    document.getElementById('cotWeek').textContent='Data: '+data.reportDate;
+    renderCOT(data.pairs||[]);
+  }catch(e){
+    console.error('COT error:',e);
+    cotLoaded=false; // allow retry on next click
+    document.getElementById('cotFeed').innerHTML=`<div class="error-box">⚠ Failed to fetch COT data.<br><small>${e.message}</small><br><br><button onclick="cotLoaded=false;fetchCOT();cotLoaded=true;" style="margin-top:8px;background:var(--bg4);border:1px solid var(--border2);color:var(--text2);padding:6px 14px;cursor:pointer;font-family:inherit;font-size:11px;border-radius:4px;">↻ Retry</button></div>`;
+  }
+}
+
+function renderCOT(pairs){
+  const feed=document.getElementById('cotFeed');
+  if(!pairs.length){feed.innerHTML=`<div class="loader" style="color:var(--text3)">No COT data found.</div>`;return;}
+
+  feed.innerHTML=`
+  <div class="cot-intro">
+    ℹ️ <span>CFTC COT data shows net positioning of <strong>Large Speculators</strong> (hedge funds, managed money). Extreme positioning often precedes reversals. Trend alignment with COT increases trade confidence.</span>
+  </div>
+  <div class="cot-grid">
+    ${pairs.map(p=>renderCOTCard(p)).join('')}
+  </div>`;
+}
+
+function renderCOTCard(p){
+  const sig=p.signal||'neutral';
+  const sigCls=sig==='bullish'?'bull':sig==='bearish'?'bear':'neut';
+  const sigLabel=sig==='bullish'?'↗ Bullish':sig==='bearish'?'↘ Bearish':'→ Neutral';
+
+  const net=p.netLong||0;
+  const chg=p.netChange||0;
+  const netCls=net>0?'pos':net<0?'neg':'neut';
+  const chgCls=chg>0?'pos':chg<0?'neg':'neut';
+  const chgStr=(chg>0?'+':'')+formatNum(chg);
+  const netStr=(net>0?'+':'')+formatNum(net);
+
+  // Bar calculation
+  const gl=Math.abs(p.grossLong||0);
+  const gs=Math.abs(p.grossShort||0);
+  const total=gl+gs||1;
+  const longPct=Math.round(gl/total*100);
+  const shortPct=Math.round(gs/total*100);
+
+  return`
+  <div class="cot-card">
+    <div class="cot-card-header">
+      <span class="cot-pair">${p.pair}</span>
+      <span class="cot-signal ${sigCls}">${sigLabel}</span>
+    </div>
+    <div class="cot-stat-row">
+      <div class="cot-stat">
+        <div class="cot-stat-label">Net Position</div>
+        <div class="cot-stat-val ${netCls}">${netStr}</div>
+      </div>
+      <div class="cot-stat">
+        <div class="cot-stat-label">Week Change</div>
+        <div class="cot-stat-val ${chgCls}">${chgStr}</div>
+      </div>
+      <div class="cot-stat">
+        <div class="cot-stat-label">Gross Long</div>
+        <div class="cot-stat-val" style="color:var(--text)">${formatNum(p.grossLong||0)}</div>
+      </div>
+      <div class="cot-stat">
+        <div class="cot-stat-label">Gross Short</div>
+        <div class="cot-stat-val" style="color:var(--text)">${formatNum(p.grossShort||0)}</div>
+      </div>
+    </div>
+    <div class="cot-bar-wrap">
+      <div class="cot-bar-label">
+        <span style="color:var(--green)">Long ${longPct}%</span>
+        <span style="color:var(--red)">Short ${shortPct}%</span>
+      </div>
+      <div class="cot-bar-track">
+        <div class="cot-center"></div>
+        <div class="cot-bar-long" style="width:${longPct}%"></div>
+        <div class="cot-bar-short" style="width:${shortPct}%"></div>
+      </div>
+    </div>
+    ${p.note?`<div class="cot-note">${p.note}</div>`:''}
+  </div>`;
+}
+
+function formatNum(n){
+  const abs=Math.abs(n);
+  if(abs>=1000000)return(n/1000000).toFixed(1)+'M';
+  if(abs>=1000)return(n/1000).toFixed(1)+'K';
+  return n.toString();
+}
+
+// ── INIT ─────────────────────────────────
+// Handled by DOMContentLoaded in API KEY section above
+</script>
+</body>
+</html>
