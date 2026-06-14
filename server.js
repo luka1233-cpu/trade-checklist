@@ -12,7 +12,16 @@ const CRON_SECRET = process.env.CRON_SECRET || 'tg_cron_2026';
 const GROQ_KEY = process.env.GROQ_API_KEY;
 const DELUKA_GROQ_KEY = process.env.DELUKA_GROQ_KEY;
 
-app.use(cors());
+app.use(cors({
+  origin: [
+    'https://luka1233-cpu.github.io',
+    'http://localhost',
+    'http://127.0.0.1',
+    /\.github\.io$/,
+    /localhost/,
+  ],
+  credentials: true,
+}));
 app.use(express.json());
 
 const sb = {
