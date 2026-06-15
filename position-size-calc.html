@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Position Size Calculator</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0a;
+    --surface: #111111;
+    --border: #1e1e1e;
+    --accent: #c8f135;
+    --accent2: #ff4d4d;
+    --text: #e8e8e8;
+    --muted: #555;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Syne', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px 16px;
+  }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 28px 24px;
+    width: 100%;
+    max-width: 420px;
+  }
+
+  .header-tag {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    color: var(--accent);
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+
+  h1 {
+    font-size: 22px;
+    font-weight: 800;
+    margin-bottom: 24px;
+    letter-spacing: -0.3px;
+  }
+
+  h1 span { color: var(--accent); }
+
+  .field { margin-bottom: 14px; }
+
+  .field label {
+    display: block;
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+
+  select, input {
+    width: 100%;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text);
+    font-family: 'Space Mono', monospace;
+    font-size: 15px;
+    padding: 12px 14px;
+    outline: none;
+    transition: border-color 0.15s;
+    appearance: none;
+    -webkit-appearance: none;
+  }
+
+  select {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23555' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 14px center;
+    padding-right: 36px;
+    cursor: pointer;
+  }
+
+  select:focus, input:focus { border-color: var(--accent); }
+  input::placeholder { color: var(--muted); }
+
+  .divider {
+    height: 1px;
+    background: var(--border);
+    margin: 20px 0;
+  }
+
+  .result-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+  }
+
+  .result-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+  }
+
+  .result-value {
+    font-family: 'Space Mono', monospace;
+    font-size: 13px;
+    color: var(--text);
+  }
+
+  .lot-box {
+    background: rgba(200, 241, 53, 0.06);
+    border: 1px solid rgba(200, 241, 53, 0.2);
+    border-radius: 8px;
+    padding: 18px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 6px;
+  }
+
+  .lot-label {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--muted);
+  }
+
+  .lot-right {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+  }
+
+  .lot-value {
+    font-family: 'Space Mono', monospace;
+    font-size: 34px;
+    font-weight: 700;
+    color: var(--accent);
+    letter-spacing: -1px;
+  }
+
+  .lot-unit {
+    font-family: 'Space Mono', monospace;
+    font-size: 13px;
+    color: var(--muted);
+  }
+
+  .note {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+    margin-top: 12px;
+    line-height: 1.7;
+    text-align: center;
+  }
+
+  .reset-btn {
+    width: 100%;
+    margin-top: 16px;
+    padding: 12px;
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--muted);
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 2px;
+    cursor: pointer;
+    transition: all 0.15s;
+    text-transform: uppercase;
+  }
+
+  .reset-btn:hover {
+    border-color: var(--accent2);
+    color: var(--accent2);
+  }
+</style>
+</head>
+<body>
+
+<div class="card">
+  <div class="header-tag">MBT · S&D · 1H/M1</div>
+  <h1>Position Size<br><span>Calculator</span></h1>
+
+  <div class="field">
+    <label>Currency Pair</label>
+    <select id="pairSelect" onchange="calc()">
+      <optgroup label="Majors">
+        <option value="EURUSD">EURUSD</option>
+        <option value="GBPUSD">GBPUSD</option>
+        <option value="AUDUSD">AUDUSD</option>
+        <option value="NZDUSD">NZDUSD</option>
+        <option value="USDCAD">USDCAD</option>
+        <option value="USDCHF">USDCHF</option>
+        <option value="USDJPY">USDJPY</option>
+      </optgroup>
+      <optgroup label="Crosses">
+        <option value="EURGBP">EURGBP</option>
+        <option value="EURJPY">EURJPY</option>
+        <option value="EURCAD">EURCAD</option>
+        <option value="EURCHF">EURCHF</option>
+        <option value="EURAUD">EURAUD</option>
+        <option value="EURNZD">EURNZD</option>
+        <option value="GBPJPY">GBPJPY</option>
+        <option value="GBPAUD">GBPAUD</option>
+        <option value="GBPCAD">GBPCAD</option>
+        <option value="GBPCHF">GBPCHF</option>
+        <option value="GBPNZD">GBPNZD</option>
+        <option value="AUDJPY">AUDJPY</option>
+        <option value="AUDCAD">AUDCAD</option>
+        <option value="AUDCHF">AUDCHF</option>
+        <option value="AUDNZD">AUDNZD</option>
+        <option value="CADJPY">CADJPY</option>
+        <option value="CHFJPY">CHFJPY</option>
+        <option value="NZDJPY">NZDJPY</option>
+      </optgroup>
+      <optgroup label="Metals">
+        <option value="XAUUSD">XAUUSD (Gold)</option>
+        <option value="XAGUSD">XAGUSD (Silver)</option>
+      </optgroup>
+    </select>
+  </div>
+
+  <div class="field">
+    <label>Stop Loss (pips)</label>
+    <input id="slPips" type="number" placeholder="10" oninput="calc()">
+  </div>
+
+  <div class="field">
+    <label>Risk Amount (€)</label>
+    <input id="riskAmt" type="number" placeholder="375" value="375" oninput="calc()">
+  </div>
+
+  <div class="divider"></div>
+
+  <div class="result-row">
+    <span class="result-label">Pip Value (1 lot)</span>
+    <span class="result-value" id="pipVal">—</span>
+  </div>
+
+  <div class="result-row">
+    <span class="result-label">Risk per pip</span>
+    <span class="result-value" id="riskPip">—</span>
+  </div>
+
+  <div class="lot-box">
+    <span class="lot-label">Lot Size</span>
+    <div class="lot-right">
+      <span class="lot-value" id="lotSize">—</span>
+      <span class="lot-unit" id="lotUnit"></span>
+    </div>
+  </div>
+
+  <div class="note" id="note">Select a pair and enter your SL to calculate</div>
+
+  <button class="reset-btn" onclick="resetCalc()">↺ RESET</button>
+</div>
+
+<script>
+  const pipValues = {
+    'EURUSD': 10.00, 'GBPUSD': 10.00, 'AUDUSD': 10.00, 'NZDUSD': 10.00,
+    'USDCAD': 7.30,  'USDCHF': 11.20, 'USDJPY': 9.10,
+    'EURGBP': 12.60, 'EURJPY': 6.50,  'EURCAD': 7.30,  'EURCHF': 11.20,
+    'EURAUD': 6.40,  'EURNZD': 5.90,
+    'GBPJPY': 6.50,  'GBPAUD': 6.40,  'GBPCAD': 7.30,  'GBPCHF': 11.20,
+    'GBPNZD': 5.90,
+    'AUDJPY': 6.50,  'AUDCAD': 7.30,  'AUDCHF': 11.20, 'AUDNZD': 5.90,
+    'CADJPY': 6.50,  'CHFJPY': 6.50,  'NZDJPY': 6.50,
+    'XAUUSD': 10.00, 'XAGUSD': 5.00,
+  };
+
+  function calc() {
+    const pair = document.getElementById('pairSelect').value;
+    const sl   = parseFloat(document.getElementById('slPips').value);
+    const risk = parseFloat(document.getElementById('riskAmt').value);
+    const pv   = pipValues[pair] || 10;
+
+    document.getElementById('pipVal').textContent = `$${pv.toFixed(2)} / lot`;
+
+    if (isNaN(sl) || isNaN(risk) || sl <= 0 || risk <= 0) {
+      document.getElementById('lotSize').textContent = '—';
+      document.getElementById('lotUnit').textContent = '';
+      document.getElementById('riskPip').textContent = '—';
+      document.getElementById('note').textContent = 'Enter SL pips and risk amount';
+      return;
+    }
+
+    const lot = risk / (sl * pv);
+    document.getElementById('lotSize').textContent = lot.toFixed(2);
+    document.getElementById('lotUnit').textContent = 'lot';
+    document.getElementById('riskPip').textContent = `$${(pv * lot).toFixed(2)} / pip`;
+    document.getElementById('note').textContent =
+      `${sl} pips × $${pv.toFixed(2)} × ${lot.toFixed(2)} lot = $${(sl * pv * lot).toFixed(2)} at risk`;
+  }
+
+  function resetCalc() {
+    document.getElementById('slPips').value = '';
+    document.getElementById('riskAmt').value = '375';
+    document.getElementById('lotSize').textContent = '—';
+    document.getElementById('lotUnit').textContent = '';
+    document.getElementById('pipVal').textContent = '—';
+    document.getElementById('riskPip').textContent = '—';
+    document.getElementById('note').textContent = 'Select a pair and enter your SL to calculate';
+  }
+
+  calc();
+</script>
+</body>
+</html>
