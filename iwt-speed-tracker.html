@@ -26,7 +26,7 @@
   html,body{margin:0;padding:0;height:100%;background:var(--bg);color:var(--text);
     font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
     overscroll-behavior:none;}
-  #app{max-width:480px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column;
+  #app{max-width:480px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column;position:relative;
     padding:env(safe-area-inset-top,16px) 16px calc(env(safe-area-inset-bottom,16px) + 16px);}
 
   .eyebrow{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:700;}
@@ -35,7 +35,7 @@
   header{display:flex;align-items:center;justify-content:space-between;padding:6px 2px 14px;}
   .iconbtns{display:flex;gap:8px;}
   .gear{width:38px;height:38px;border-radius:12px;background:var(--card);border:1px solid var(--border);
-    display:flex;align-items:center;justify-content:center;color:var(--muted);cursor:pointer;font-size:16px;}
+    display:flex;align-items:center;justify-content:center;color:var(--muted);cursor:pointer;font-size:16px;flex-shrink:0;}
   .gear:active{transform:scale(.94);}
 
   .card{background:var(--card);border:1px solid var(--border);border-radius:18px;padding:18px;margin-bottom:14px;}
@@ -55,23 +55,29 @@
   .primary-btn{width:100%;padding:18px;border:none;border-radius:16px;background:var(--fast);color:#0B0D10;
     font-size:17px;font-weight:800;letter-spacing:-.01em;cursor:pointer;}
   .primary-btn:active{filter:brightness(.92);}
+  .primary-btn:disabled{background:#2A2E35;color:var(--muted);cursor:default;}
   .secondary-btn{width:100%;padding:16px;border:1px solid var(--border);border-radius:16px;background:transparent;
     color:var(--text);font-size:15px;font-weight:700;cursor:pointer;margin-top:10px;}
   .row-btns{display:flex;gap:10px;margin-top:10px;}
   .row-btns .secondary-btn{margin-top:0;}
-  .ghost-btn{background:transparent;border:none;color:var(--muted);font-size:13px;font-weight:600;text-decoration:underline;cursor:pointer;padding:8px;}
+  .ghost-btn{background:transparent;border:none;color:var(--muted);font-size:13px;font-weight:600;text-decoration:underline;cursor:pointer;padding:8px;display:block;margin:2px auto 0;}
   .test-btn{padding:10px 14px;border-radius:12px;border:1px solid var(--border);background:#1A1F27;color:var(--text);font-size:13px;font-weight:700;cursor:pointer;flex-shrink:0;}
 
   .banner{font-size:13px;line-height:1.5;color:var(--muted);background:var(--card);border:1px solid var(--border);
     border-radius:14px;padding:12px 14px;margin-bottom:14px;}
 
+  .gps-status{display:flex;align-items:center;gap:9px;font-size:13px;font-weight:700;background:var(--card);
+    border:1px solid var(--border);border-radius:14px;padding:12px 14px;margin-bottom:14px;}
+  .gps-status .gpsdot{width:9px;height:9px;flex-shrink:0;}
+
   #session{display:none;flex-direction:column;flex:1;}
-  .setdots{display:flex;gap:6px;justify-content:center;margin-bottom:10px;}
+  .session-topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+  .setdots{display:flex;gap:6px;justify-content:center;}
   .setdots span{width:7px;height:7px;border-radius:50%;background:var(--border);}
   .setdots span.done{background:var(--muted);}
   .setdots span.active{background:var(--text);}
 
-  .ring-wrap{position:relative;width:270px;height:270px;margin:6px auto 14px;}
+  .ring-wrap{position:relative;width:270px;height:270px;margin:6px auto 10px;}
   .ring-wrap svg{width:100%;height:100%;transform:rotate(-90deg);}
   .ring-track{fill:none;stroke:var(--border);stroke-width:10;}
   .ring-prog{fill:none;stroke-width:10;stroke-linecap:round;transition:stroke .3s;}
@@ -81,6 +87,9 @@
   .phase-label.slow{color:var(--slow);background:var(--slow-dim);}
   .timer{font-size:52px;font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:-.02em;line-height:1;}
   .setlabel{font-size:12px;color:var(--muted);font-weight:700;margin-top:6px;letter-spacing:.04em;}
+
+  .phase-dist{text-align:center;font-size:12px;color:var(--muted);font-weight:700;margin-bottom:10px;}
+  .phase-dist b{color:var(--text);}
 
   .speed-row{display:flex;gap:10px;margin-bottom:6px;}
   .speed-box{flex:1;background:var(--card);border:1px solid var(--border);border-radius:16px;padding:14px 12px;text-align:center;}
@@ -100,8 +109,9 @@
   .hrow .tag{font-size:11px;font-weight:800;padding:3px 8px;border-radius:8px;letter-spacing:.04em;}
   .hrow .tag.fast{color:var(--fast);background:var(--fast-dim);}
   .hrow .tag.slow{color:var(--slow);background:var(--slow-dim);}
-  .hrow .v{font-size:15px;font-weight:800;font-variant-numeric:tabular-nums;}
+  .hrow .v{font-size:15px;font-weight:800;font-variant-numeric:tabular-nums;text-align:right;}
   .hrow .l{font-size:12px;color:var(--muted);}
+  .hrow .dist{font-size:11px;color:var(--muted);margin-top:2px;text-align:right;}
 
   .controls{display:flex;gap:10px;}
   .controls button{flex:1;padding:16px;border-radius:16px;border:none;font-size:15px;font-weight:800;cursor:pointer;}
@@ -122,6 +132,18 @@
   .sess-stats{display:flex;gap:14px;font-size:12px;color:var(--muted);}
   .sess-stats b{color:var(--text);}
 
+  /* lock overlay */
+  .lock-overlay{position:fixed;inset:0;background:rgba(11,13,16,.97);z-index:50;display:none;
+    align-items:center;justify-content:center;flex-direction:column;touch-action:none;}
+  .lock-inner{display:flex;flex-direction:column;align-items:center;gap:10px;padding:20px;}
+  .lock-icon{font-size:42px;}
+  .lock-text{font-size:17px;font-weight:800;}
+  .lock-sub{font-size:13px;color:var(--muted);}
+  .lock-progress-track{width:220px;height:8px;background:var(--border);border-radius:6px;overflow:hidden;margin-top:14px;}
+  .lock-progress-fill{width:0%;height:100%;background:var(--fast);border-radius:6px;}
+  .lock-status{position:fixed;top:calc(env(safe-area-inset-top,16px) + 10px);left:0;right:0;text-align:center;
+    font-size:12px;color:var(--muted);font-weight:700;}
+
   ::-webkit-scrollbar{width:0;height:0;}
 </style>
 </head>
@@ -141,7 +163,12 @@
 
   <!-- SETUP -->
   <div id="setup">
-    <div class="banner">Koristi GPS da meri realnu brzinu hodanja tokom brzih i sporih intervala. Za tačnije rezultate, drži telefon napolju (ne u džepu) i dozvoli pristup lokaciji.</div>
+    <div class="banner">Koristi GPS da meri realnu brzinu hodanja tokom brzih i sporih intervala. Za tačnije rezultate, drži telefon napolju (ne u džepu) i dozvoli pristup lokaciji. Napomena: ekran se ne može sprečiti da se zaključa ako ručno pritisneš dugme na telefonu — samo automatsko gašenje je blokirano.</div>
+
+    <div class="gps-status" id="gpsStatusRow">
+      <span class="gpsdot" id="preGpsDot" style="background:var(--warn)"></span>
+      <span id="preGpsText">Tražim GPS signal…</span>
+    </div>
 
     <div class="card">
       <h3>Intervali</h3>
@@ -206,12 +233,17 @@
       </div>
     </div>
 
-    <button class="primary-btn" id="startBtn">Počni trening</button>
+    <button class="primary-btn" id="startBtn" disabled>Čekam GPS…</button>
+    <button class="ghost-btn" id="forceStartBtn" style="display:none;">Pokreni ipak (bez čekanja GPS-a)</button>
   </div>
 
   <!-- SESSION -->
   <div id="session">
-    <div class="setdots" id="setDots"></div>
+    <div class="session-topbar">
+      <div style="width:38px;"></div>
+      <div class="setdots" id="setDots"></div>
+      <div class="gear" id="lockToggleBtn" title="Zaključaj kontrole">🔓</div>
+    </div>
 
     <div class="ring-wrap">
       <svg viewBox="0 0 270 270">
@@ -225,6 +257,8 @@
         <div class="setlabel" id="setLabel">SET 1 / 5</div>
       </div>
     </div>
+
+    <div class="phase-dist" id="phaseDistLine">Ovaj interval: <b>0 m</b></div>
 
     <div class="speed-row">
       <div class="speed-box main">
@@ -278,6 +312,16 @@
     <button class="secondary-btn" id="closeHistBtn">Nazad</button>
   </div>
 
+  <!-- LOCK OVERLAY -->
+  <div class="lock-overlay" id="lockOverlay">
+    <div class="lock-inner">
+      <div class="lock-icon">🔒</div>
+      <div class="lock-text">Kontrole zaključane</div>
+      <div class="lock-sub">Drži dodirnuto 1,5s da otključaš</div>
+      <div class="lock-progress-track"><div class="lock-progress-fill" id="lockFill"></div></div>
+    </div>
+  </div>
+
 </div>
 
 <script>
@@ -287,6 +331,9 @@
   var CIRC = 2*Math.PI*118;
   var TONE_LABELS = { beep:'Bip', siren:'Sirena', bell:'Zvono', long:'Dugi ton' };
   var TONE_ORDER = ['beep','siren','bell','long'];
+  var SMOOTH_WINDOW_MS = 4000;
+  var LOCK_HOLD_MS = 1400;
+  var GPS_READY_ACC = 20;
 
   var cfg = loadSettings();
 
@@ -337,7 +384,7 @@
     cfg.toneStyle = TONE_ORDER[(idx+1)%TONE_ORDER.length];
     saveSettings(); refreshSetupUI();
   });
-  document.getElementById('toneTestBtn').addEventListener('click', function(){ playAlert('toFast'); });
+  document.getElementById('toneTestBtn').addEventListener('click', function(){ ensureCtx(); playAlert('toFast'); });
 
   document.getElementById('gearBtn').addEventListener('click', function(){
     if(state.running) return;
@@ -350,20 +397,23 @@
     document.getElementById('session').style.display = name==='session' ? 'flex' : 'none';
     document.getElementById('summary').style.display = name==='summary' ? 'flex' : 'none';
     document.getElementById('historyView').style.display = name==='historyView' ? 'flex' : 'none';
+    if(name==='setup' && !state.running && state.preGeoWatchId==null){ startPreGeoCheck(); }
   }
 
   // ---------- state ----------
   var state = {
-    running:false, paused:false,
+    running:false, paused:false, controlsLocked:false,
     phase:null, setIndex:0,
     phaseRemaining:0, phaseTotal:0,
     phaseDistanceM:0, phaseElapsedSec:0,
-    lastPos:null, smoothedSpeed:0,
+    lastPos:null, smoothedSpeed:0, rawWindow:[],
     samples:[],
     watchId:null, tickId:null,
     history:[],
     wakeLock:null,
-    sessionStart:0, totalDistanceM:0
+    sessionStart:0, totalDistanceM:0,
+    gpsReady:false, preGeoWatchId:null, forceTimeoutId:null,
+    historyPushed:false
   };
 
   function fmtTime(sec){
@@ -377,6 +427,10 @@
       return d.toLocaleDateString('sr-RS', {day:'2-digit', month:'2-digit', year:'numeric'}) + ' ' +
              d.toLocaleTimeString('sr-RS', {hour:'2-digit', minute:'2-digit'});
     }catch(e){ return iso; }
+  }
+  function fmtDist(m){
+    if(m<1000) return Math.round(m)+' m';
+    return (m/1000).toFixed(2)+' km';
   }
 
   function haversine(lat1,lon1,lat2,lon2){
@@ -420,11 +474,11 @@
     o.start(t0); o.stop(t0+dur+0.05);
   }
 
-  function playAlert(kind){ // 'toFast' | 'toSlow' | 'done'
+  function playAlert(kind){
     try{
       ensureCtx();
       var vol = cfg.volume;
-      var peak = 0.22 + vol*0.55; // louder overall than before
+      var peak = 0.22 + vol*0.55;
       switch(cfg.toneStyle){
         case 'siren':
           if(kind==='toFast'){ sweep(500,1000,0,0.9,peak); }
@@ -441,7 +495,7 @@
           else if(kind==='toSlow'){ tone(340,0,1.9,peak,'triangle'); }
           else { tone(500,0,0.8,peak,'triangle'); tone(750,0.7,1.8,peak,'triangle'); }
           break;
-        default: // beep
+        default:
           if(kind==='toFast'){ tone(880,0,0.28,peak,'square'); tone(1108,0.28,0.34,peak,'square'); }
           else if(kind==='toSlow'){ tone(392,0,0.55,peak,'square'); }
           else { tone(660,0,0.24,peak,'square'); tone(880,0.26,0.24,peak,'square'); tone(1108,0.52,0.5,peak,'square'); }
@@ -461,7 +515,55 @@
     try{ if(state.wakeLock){ state.wakeLock.release(); state.wakeLock=null; } }catch(e){}
   }
 
-  // ---------- geolocation ----------
+  // ---------- pre-start GPS readiness check ----------
+  function startPreGeoCheck(){
+    if(!navigator.geolocation){ setPreGeoStatus('unsupported'); return; }
+    setPreGeoStatus('searching', null);
+    state.preGeoWatchId = navigator.geolocation.watchPosition(function(pos){
+      var acc = pos.coords.accuracy;
+      if(acc!=null && acc<GPS_READY_ACC){ setPreGeoStatus('ready', acc); }
+      else { setPreGeoStatus('searching', acc); }
+    }, function(){ setPreGeoStatus('error'); }, {enableHighAccuracy:true, maximumAge:2000, timeout:15000});
+
+    if(state.forceTimeoutId) clearTimeout(state.forceTimeoutId);
+    state.forceTimeoutId = setTimeout(function(){
+      if(!state.gpsReady){ document.getElementById('forceStartBtn').style.display='block'; }
+    }, 8000);
+  }
+  function stopPreGeoCheck(){
+    if(state.preGeoWatchId!=null && navigator.geolocation){ navigator.geolocation.clearWatch(state.preGeoWatchId); state.preGeoWatchId=null; }
+    if(state.forceTimeoutId){ clearTimeout(state.forceTimeoutId); state.forceTimeoutId=null; }
+  }
+  function setPreGeoStatus(kind, acc){
+    var dot = document.getElementById('preGpsDot');
+    var txt = document.getElementById('preGpsText');
+    var startBtn = document.getElementById('startBtn');
+    if(kind==='ready'){
+      state.gpsReady = true;
+      dot.style.background = 'var(--ok)';
+      txt.textContent = 'GPS spreman (tačnost ~'+Math.round(acc)+'m)';
+      startBtn.disabled = false; startBtn.textContent = 'Počni trening';
+      document.getElementById('forceStartBtn').style.display = 'none';
+    } else if(kind==='searching'){
+      state.gpsReady = false;
+      dot.style.background = 'var(--warn)';
+      txt.textContent = acc!=null ? ('Tražim GPS… (tačnost ~'+Math.round(acc)+'m)') : 'Tražim GPS signal…';
+      startBtn.disabled = true; startBtn.textContent = 'Čekam GPS…';
+    } else if(kind==='error'){
+      state.gpsReady = false;
+      dot.style.background = 'var(--danger)';
+      txt.textContent = 'Nema pristupa GPS-u — proveri dozvole lokacije.';
+      startBtn.disabled = true; startBtn.textContent = 'Čekam GPS…';
+    } else {
+      state.gpsReady = false;
+      dot.style.background = 'var(--danger)';
+      txt.textContent = 'GPS nije podržan na ovom uređaju/pregledaču.';
+      startBtn.disabled = true;
+    }
+  }
+  document.getElementById('forceStartBtn').addEventListener('click', function(){ startSession(); });
+
+  // ---------- geolocation (during session) ----------
   function startGeo(){
     if(!navigator.geolocation) return;
     state.watchId = navigator.geolocation.watchPosition(onPosition, onGeoError, {
@@ -500,7 +602,14 @@
     }
 
     if(instant!=null){
-      state.smoothedSpeed = state.smoothedSpeed===0 ? instant : (state.smoothedSpeed*0.7 + instant*0.3);
+      var nowMs = Date.now();
+      state.rawWindow.push({t:nowMs, v:instant});
+      var cutoff = nowMs - SMOOTH_WINDOW_MS;
+      while(state.rawWindow.length && state.rawWindow[0].t < cutoff) state.rawWindow.shift();
+      var sum=0, count=0;
+      for(var i=0;i<state.rawWindow.length;i++){ sum += state.rawWindow[i].v; count++; }
+      state.smoothedSpeed = count ? sum/count : instant;
+
       state.samples.push({t:state.phaseElapsedSec, v:state.smoothedSpeed});
       if(state.samples.length>90) state.samples.shift();
       updateSpeedUI();
@@ -515,6 +624,7 @@
     var max = 0;
     for(var i=0;i<state.samples.length;i++){ if(state.samples[i].v>max) max = state.samples[i].v; }
     document.getElementById('maxSpeed').textContent = max.toFixed(1);
+    document.getElementById('phaseDistLine').innerHTML = 'Ovaj interval: <b>'+fmtDist(state.phaseDistanceM)+'</b>';
 
     var target = state.phase==='fast' ? cfg.fastTarget : cfg.slowTarget;
     var diffEl = document.getElementById('targetDiff');
@@ -550,10 +660,11 @@
   // ---------- session flow ----------
   function startSession(){
     ensureCtx();
+    stopPreGeoCheck();
     state.running = true; state.paused = false;
     state.setIndex = 0; state.phase = 'fast';
     state.phaseTotal = cfg.fastMin*60; state.phaseRemaining = state.phaseTotal;
-    state.phaseDistanceM = 0; state.phaseElapsedSec = 0; state.samples = [];
+    state.phaseDistanceM = 0; state.phaseElapsedSec = 0; state.samples = []; state.rawWindow = [];
     state.lastPos = null; state.smoothedSpeed = 0; state.history = [];
     state.totalDistanceM = 0; state.sessionStart = Date.now();
 
@@ -566,6 +677,11 @@
     playAlert('toFast');
     state.tickId = setInterval(tick, 1000);
     render();
+
+    try{
+      history.pushState({iwt:true}, '', location.href);
+      state.historyPushed = true;
+    }catch(e){}
   }
 
   function tick(){
@@ -578,11 +694,11 @@
     var avg = state.phaseElapsedSec>0 ? (state.phaseDistanceM/state.phaseElapsedSec)*3.6 : 0;
     var max = 0;
     for(var i=0;i<state.samples.length;i++){ if(state.samples[i].v>max) max = state.samples[i].v; }
-    state.history.unshift({set:state.setIndex+1, phase:state.phase, avg:avg, max:max, dur:state.phaseElapsedSec});
+    state.history.unshift({set:state.setIndex+1, phase:state.phase, avg:avg, max:max, dur:state.phaseElapsedSec, distanceM:state.phaseDistanceM});
     renderHistory();
 
     var wasFast = state.phase==='fast';
-    state.phaseDistanceM = 0; state.phaseElapsedSec = 0; state.samples = []; state.lastPos = null;
+    state.phaseDistanceM = 0; state.phaseElapsedSec = 0; state.samples = []; state.rawWindow = []; state.lastPos = null;
 
     if(wasFast){
       state.phase = 'slow';
@@ -603,6 +719,7 @@
     clearInterval(state.tickId); state.tickId=null;
     stopGeo(); releaseWakeLock();
     state.running = false;
+    if(state.controlsLocked) exitLock();
 
     var fastVals = state.history.filter(function(h){return h.phase==='fast';});
     var slowVals = state.history.filter(function(h){return h.phase==='slow';});
@@ -633,7 +750,7 @@
     state.paused = !state.paused;
     document.getElementById('pauseBtn').textContent = state.paused ? 'Nastavi' : 'Pauza';
     if(state.paused){ stopGeo(); releaseWakeLock(); }
-    else { state.lastPos = null; startGeo(); requestWakeLock(); }
+    else { state.lastPos = null; state.rawWindow = []; startGeo(); requestWakeLock(); }
   }
 
   function stopSession(){
@@ -676,7 +793,7 @@
     row.innerHTML =
       '<div><span class="tag '+h.phase+'">'+(h.phase==='fast'?'BRZO':'SPORO')+'</span> '+
       '<span class="l">Set '+h.set+' · '+fmtTime(h.dur)+'</span></div>'+
-      '<div class="v">'+h.avg.toFixed(1)+' km/h</div>';
+      '<div><div class="v">'+h.avg.toFixed(1)+' km/h</div><div class="dist">'+fmtDist(h.distanceM||0)+'</div></div>';
     return row;
   }
   function renderHistory(){
@@ -727,9 +844,9 @@
 
   // ---------- CSV / share ----------
   function buildCSV(){
-    var lines = ['Set,Faza,ProsekKmH,MaxKmH,TrajanjeSec'];
+    var lines = ['Set,Faza,ProsekKmH,MaxKmH,DistancaM,TrajanjeSec'];
     state.history.slice().reverse().forEach(function(h){
-      lines.push(h.set+','+(h.phase==='fast'?'Brzo':'Sporo')+','+h.avg.toFixed(2)+','+h.max.toFixed(2)+','+h.dur);
+      lines.push(h.set+','+(h.phase==='fast'?'Brzo':'Sporo')+','+h.avg.toFixed(2)+','+h.max.toFixed(2)+','+Math.round(h.distanceM||0)+','+h.dur);
     });
     return lines.join('\n');
   }
@@ -760,8 +877,54 @@
     setTimeout(function(){ URL.revokeObjectURL(url); }, 3000);
   });
 
+  // ---------- controls lock ----------
+  var lockRAF = null, lockStartTs = 0;
+  function enterLock(){
+    state.controlsLocked = true;
+    document.getElementById('lockOverlay').style.display = 'flex';
+    document.getElementById('lockFill').style.width = '0%';
+  }
+  function exitLock(){
+    state.controlsLocked = false;
+    document.getElementById('lockOverlay').style.display = 'none';
+    document.getElementById('lockFill').style.width = '0%';
+    if(lockRAF) cancelAnimationFrame(lockRAF);
+  }
+  function lockPointerDown(){
+    lockStartTs = performance.now();
+    step();
+    function step(){
+      var elapsed = performance.now() - lockStartTs;
+      var pct = Math.min(100, (elapsed/LOCK_HOLD_MS)*100);
+      document.getElementById('lockFill').style.width = pct+'%';
+      if(pct>=100){ exitLock(); return; }
+      lockRAF = requestAnimationFrame(step);
+    }
+  }
+  function lockPointerUp(){
+    if(lockRAF) cancelAnimationFrame(lockRAF);
+    document.getElementById('lockFill').style.width = '0%';
+  }
+  document.getElementById('lockToggleBtn').addEventListener('click', function(){ if(state.running) enterLock(); });
+  var lockOverlayEl = document.getElementById('lockOverlay');
+  lockOverlayEl.addEventListener('pointerdown', lockPointerDown);
+  lockOverlayEl.addEventListener('pointerup', lockPointerUp);
+  lockOverlayEl.addEventListener('pointercancel', lockPointerUp);
+  lockOverlayEl.addEventListener('pointerleave', lockPointerUp);
+
+  // ---------- accidental-exit guards ----------
+  window.addEventListener('beforeunload', function(e){
+    if(state.running){ e.preventDefault(); e.returnValue = ''; }
+  });
+  window.addEventListener('popstate', function(){
+    if(state.running){
+      try{ history.pushState({iwt:true}, '', location.href); }catch(e){}
+      if(confirm('Zaustaviti trening i izaći iz sesije?')){ finishSession(); }
+    }
+  });
+
   // ---------- wire up ----------
-  document.getElementById('startBtn').addEventListener('click', startSession);
+  document.getElementById('startBtn').addEventListener('click', function(){ if(!this.disabled) startSession(); });
   document.getElementById('pauseBtn').addEventListener('click', pauseResume);
   document.getElementById('stopBtn').addEventListener('click', stopSession);
   document.getElementById('restartBtn').addEventListener('click', function(){ showView('setup'); });
@@ -775,6 +938,9 @@
       navigator.serviceWorker.register('iwt-sw.js').catch(function(){});
     });
   }
+
+  // kick off GPS readiness check on load
+  startPreGeoCheck();
 })();
 </script>
 </body>
