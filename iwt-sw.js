@@ -1,4 +1,4 @@
-const CACHE_NAME = 'iwt-cache-v3';
+const CACHE_NAME = 'iwt-cache-v5';
 const ASSETS = [
   './iwt-speed-tracker.html',
   './iwt-manifest.json',

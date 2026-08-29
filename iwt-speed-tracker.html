@@ -6,6 +6,7 @@
 <meta name="theme-color" content="#0B0D10">
 <link rel="manifest" href="iwt-manifest.json">
 <link rel="apple-touch-icon" href="iwt-icon-192.png">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
 <title>IWT Brzinomer</title>
 <style>
   :root{
@@ -129,8 +130,17 @@
   .sess-top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px;}
   .sess-date{font-size:13px;font-weight:700;color:var(--muted);}
   .sess-dist{font-size:18px;font-weight:800;}
-  .sess-stats{display:flex;gap:14px;font-size:12px;color:var(--muted);}
+  .sess-stats{display:flex;gap:14px;font-size:12px;color:var(--muted);flex-wrap:wrap;}
   .sess-stats b{color:var(--text);}
+  .sess-map-btn{margin-top:10px;padding:8px 12px;border-radius:10px;border:1px solid var(--border);
+    background:#1A1F27;color:var(--text);font-size:12px;font-weight:700;cursor:pointer;}
+
+  #mapView{display:none;flex-direction:column;flex:1;}
+  #mapViewTop{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+  #leafletMap{flex:1;border-radius:18px;overflow:hidden;border:1px solid var(--border);min-height:300px;background:#1A1F27;}
+  .map-legend{display:flex;gap:14px;justify-content:center;margin-top:10px;font-size:12px;font-weight:700;color:var(--muted);}
+  .map-legend span{display:inline-flex;align-items:center;gap:6px;}
+  .map-legend i{width:16px;height:4px;border-radius:2px;display:inline-block;}
 
   /* lock overlay */
   .lock-overlay{position:fixed;inset:0;background:rgba(11,13,16,.97);z-index:50;display:none;
@@ -240,7 +250,7 @@
   <!-- SESSION -->
   <div id="session">
     <div class="session-topbar">
-      <div style="width:38px;"></div>
+      <div class="gear" id="liveMapBtn" title="Mapa uživo">🗺️</div>
       <div class="setdots" id="setDots"></div>
       <div class="gear" id="lockToggleBtn" title="Zaključaj kontrole">🔓</div>
     </div>
@@ -302,6 +312,7 @@
       <button class="secondary-btn" id="shareBtn" style="flex:1;">Podeli / CSV</button>
       <button class="secondary-btn" id="restartBtn" style="flex:1;">Novi trening</button>
     </div>
+    <button class="secondary-btn" id="sumMapBtn">Mapa kretanja</button>
   </div>
 
   <!-- HISTORY OF SESSIONS -->
@@ -310,6 +321,22 @@
     <div class="history" id="sessList" style="flex:1;"></div>
     <button class="secondary-btn" id="clearHistBtn">Obriši istoriju</button>
     <button class="secondary-btn" id="closeHistBtn">Nazad</button>
+  </div>
+
+  <!-- MAP OF ROUTE -->
+  <div id="mapView">
+    <div id="mapViewTop">
+      <div>
+        <div class="eyebrow">Ruta treninga</div>
+        <h1 id="mapDateLabel" style="font-size:17px;">Mapa kretanja</h1>
+      </div>
+      <div class="gear" id="closeMapBtn">✕</div>
+    </div>
+    <div id="leafletMap"></div>
+    <div class="map-legend">
+      <span><i style="background:var(--fast)"></i>Brzo</span>
+      <span><i style="background:var(--slow)"></i>Sporo</span>
+    </div>
   </div>
 
   <!-- LOCK OVERLAY -->
@@ -324,6 +351,7 @@
 
 </div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script>
 (function(){
   "use strict";
@@ -397,6 +425,7 @@
     document.getElementById('session').style.display = name==='session' ? 'flex' : 'none';
     document.getElementById('summary').style.display = name==='summary' ? 'flex' : 'none';
     document.getElementById('historyView').style.display = name==='historyView' ? 'flex' : 'none';
+    document.getElementById('mapView').style.display = name==='mapView' ? 'flex' : 'none';
     if(name==='setup' && !state.running && state.preGeoWatchId==null){ startPreGeoCheck(); }
   }
 
@@ -413,7 +442,8 @@
     wakeLock:null,
     sessionStart:0, totalDistanceM:0,
     gpsReady:false, preGeoWatchId:null, forceTimeoutId:null,
-    historyPushed:false
+    historyPushed:false,
+    pathPoints:[], lastPathPushT:0, mapReturnView:'setup'
   };
 
   function fmtTime(sec){
@@ -594,10 +624,19 @@
           instant = (c.speed!=null && isFinite(c.speed) && c.speed>=0) ? c.speed*3.6 : derivedKmh;
           if(acc<30){ state.phaseDistanceM += dist; state.totalDistanceM += dist; }
           state.lastPos = {lat:c.latitude, lon:c.longitude, t:now};
+          updateLiveDot(c.latitude, c.longitude);
+
+          var nowForPath = Date.now();
+          if(acc<40 && nowForPath - state.lastPathPushT >= 5000){
+            state.pathPoints.push({lat:c.latitude, lon:c.longitude, phase:state.phase});
+            state.lastPathPushT = nowForPath;
+            refreshLiveRoute();
+          }
         }
       }
     } else {
       state.lastPos = {lat:c.latitude, lon:c.longitude, t:now};
+      updateLiveDot(c.latitude, c.longitude);
       if(c.speed!=null && isFinite(c.speed) && c.speed>=0) instant = c.speed*3.6;
     }
 
@@ -667,6 +706,7 @@
     state.phaseDistanceM = 0; state.phaseElapsedSec = 0; state.samples = []; state.rawWindow = [];
     state.lastPos = null; state.smoothedSpeed = 0; state.history = [];
     state.totalDistanceM = 0; state.sessionStart = Date.now();
+    state.pathPoints = []; state.lastPathPushT = 0;
 
     showView('session');
     renderSetDots();
@@ -720,6 +760,8 @@
     stopGeo(); releaseWakeLock();
     state.running = false;
     if(state.controlsLocked) exitLock();
+    if(state.mapLive && leafletMap && state.liveDotMarker){ leafletMap.removeLayer(state.liveDotMarker); state.liveDotMarker=null; }
+    state.mapLive = false;
 
     var fastVals = state.history.filter(function(h){return h.phase==='fast';});
     var slowVals = state.history.filter(function(h){return h.phase==='slow';});
@@ -731,7 +773,8 @@
       date: new Date().toISOString(),
       distanceKm: state.totalDistanceM/1000,
       fastAvg: favg, slowAvg: savg, durationSec: durSec,
-      intervals: state.history.slice()
+      intervals: state.history.slice(),
+      path: state.pathPoints.slice()
     });
 
     showView('summary');
@@ -828,6 +871,13 @@
       card.innerHTML =
         '<div class="sess-top"><div class="sess-date">'+fmtDate(s.date)+'</div><div class="sess-dist">'+s.distanceKm.toFixed(2)+' km</div></div>'+
         '<div class="sess-stats"><span>Brzo <b>'+s.fastAvg.toFixed(1)+'</b> km/h</span><span>Sporo <b>'+s.slowAvg.toFixed(1)+'</b> km/h</span><span>Trajanje <b>'+fmtTime(s.durationSec)+'</b></span></div>';
+      if(s.path && s.path.length>1){
+        var btn = document.createElement('button');
+        btn.className = 'sess-map-btn';
+        btn.textContent = 'Mapa';
+        btn.addEventListener('click', function(){ openMap(s.path, fmtDate(s.date)); });
+        card.appendChild(btn);
+      }
       wrap.appendChild(card);
     });
   }
@@ -922,6 +972,122 @@
       if(confirm('Zaustaviti trening i izaći iz sesije?')){ finishSession(); }
     }
   });
+
+  // ---------- route map ----------
+  var leafletMap = null;
+  state.mapLive = false;
+  state.liveDotMarker = null;
+  state.routeLines = [];
+  state.startMarker = null;
+  state.finishMarker = null;
+
+  function ensureMapInit(){
+    if(leafletMap) return;
+    leafletMap = L.map('leafletMap', {zoomControl:true, attributionControl:true});
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+      maxZoom: 19,
+      attribution: '&copy; OpenStreetMap &copy; CARTO'
+    }).addTo(leafletMap);
+  }
+
+  function clearRouteLayers(){
+    state.routeLines.forEach(function(l){ leafletMap.removeLayer(l); });
+    state.routeLines = [];
+    if(state.startMarker){ leafletMap.removeLayer(state.startMarker); state.startMarker = null; }
+    if(state.finishMarker){ leafletMap.removeLayer(state.finishMarker); state.finishMarker = null; }
+  }
+
+  function drawRoute(points, showFinish){
+    clearRouteLayers();
+    if(!points || points.length<2) return null;
+
+    var segments = [];
+    var current = [points[0]];
+    for(var i=1;i<points.length;i++){
+      current.push(points[i]);
+      if(points[i].phase !== points[i-1].phase){
+        segments.push({phase:points[i-1].phase, pts:current.slice()});
+        current = [points[i-1], points[i]];
+      }
+    }
+    segments.push({phase:current[current.length-1].phase, pts:current.slice()});
+
+    var allLatLngs = [];
+    segments.forEach(function(seg){
+      var latlngs = seg.pts.map(function(p){ return [p.lat, p.lon]; });
+      allLatLngs = allLatLngs.concat(latlngs);
+      var line = L.polyline(latlngs, {
+        color: seg.phase==='fast' ? '#FF5A36' : '#2DD4BF',
+        weight: 5, opacity: 0.9, lineCap:'round'
+      }).addTo(leafletMap);
+      state.routeLines.push(line);
+    });
+
+    state.startMarker = L.circleMarker([points[0].lat, points[0].lon],
+      {radius:7, color:'#fff', fillColor:'#3ECF8E', fillOpacity:1, weight:2}).addTo(leafletMap);
+    if(showFinish){
+      var last = points[points.length-1];
+      state.finishMarker = L.circleMarker([last.lat, last.lon],
+        {radius:7, color:'#fff', fillColor:'#E5484D', fillOpacity:1, weight:2}).addTo(leafletMap);
+    }
+    return allLatLngs;
+  }
+
+  function openMap(points, label, opts){
+    opts = opts || {};
+    state.mapLive = !!opts.live;
+    state.mapReturnView = state.mapLive ? 'session' :
+      (document.getElementById('summary').style.display === 'flex' ? 'summary' : 'historyView');
+    document.getElementById('mapDateLabel').textContent = label ? label : 'Mapa kretanja';
+    showView('mapView');
+    ensureMapInit();
+
+    if(state.liveDotMarker){ leafletMap.removeLayer(state.liveDotMarker); state.liveDotMarker = null; }
+    var allLatLngs = drawRoute(points, !state.mapLive);
+
+    setTimeout(function(){
+      leafletMap.invalidateSize();
+      if(state.mapLive && state.lastPos){
+        leafletMap.setView([state.lastPos.lat, state.lastPos.lon], 17);
+        updateLiveDot(state.lastPos.lat, state.lastPos.lon);
+      } else if(allLatLngs && allLatLngs.length){
+        leafletMap.fitBounds(allLatLngs, {padding:[24,24]});
+      }
+    }, 50);
+  }
+
+  function isMapViewOpen(){ return document.getElementById('mapView').style.display === 'flex'; }
+
+  function refreshLiveRoute(){
+    if(!state.mapLive || !isMapViewOpen()) return;
+    drawRoute(state.pathPoints, false);
+  }
+
+  function updateLiveDot(lat, lon){
+    if(!state.mapLive || !isMapViewOpen() || !leafletMap) return;
+    if(!state.liveDotMarker){
+      state.liveDotMarker = L.circleMarker([lat,lon],
+        {radius:8, color:'#fff', weight:2, fillColor:'#3ECF8E', fillOpacity:1}).addTo(leafletMap);
+    } else {
+      state.liveDotMarker.setLatLng([lat,lon]);
+    }
+    var latlng = L.latLng(lat, lon);
+    if(!leafletMap.getBounds().contains(latlng)){ leafletMap.panTo(latlng, {animate:true}); }
+  }
+
+  function closeMap(){
+    if(state.liveDotMarker && leafletMap){ leafletMap.removeLayer(state.liveDotMarker); state.liveDotMarker = null; }
+    state.mapLive = false;
+    showView(state.mapReturnView);
+  }
+
+  document.getElementById('closeMapBtn').addEventListener('click', closeMap);
+  document.getElementById('sumMapBtn').addEventListener('click', function(){ openMap(state.pathPoints, 'Poslednji trening'); });
+  document.getElementById('liveMapBtn').addEventListener('click', function(){
+    if(!state.running) return;
+    openMap(state.pathPoints, 'Uživo', {live:true});
+  });
+
 
   // ---------- wire up ----------
   document.getElementById('startBtn').addEventListener('click', function(){ if(!this.disabled) startSession(); });
