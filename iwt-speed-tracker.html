@@ -360,6 +360,7 @@
   var TONE_LABELS = { beep:'Bip', siren:'Sirena', bell:'Zvono', long:'Dugi ton' };
   var TONE_ORDER = ['beep','siren','bell','long'];
   var SMOOTH_WINDOW_MS = 4000;
+  var PHASE_SETTLE_MS = 4000;
   var LOCK_HOLD_MS = 1400;
   var GPS_READY_ACC = 20;
 
@@ -443,7 +444,8 @@
     sessionStart:0, totalDistanceM:0,
     gpsReady:false, preGeoWatchId:null, forceTimeoutId:null,
     historyPushed:false,
-    pathPoints:[], lastPathPushT:0, mapReturnView:'setup'
+    pathPoints:[], lastPathPushT:0, mapReturnView:'setup',
+    phaseSettleUntil:0, phaseSettledDistanceM:0, phaseSettledStartT:null
   };
 
   function fmtTime(sec){
@@ -622,7 +624,15 @@
         var derivedKmh = (dist/dt)*3.6;
         if(derivedKmh < 20){
           instant = (c.speed!=null && isFinite(c.speed) && c.speed>=0) ? c.speed*3.6 : derivedKmh;
-          if(acc<30){ state.phaseDistanceM += dist; state.totalDistanceM += dist; }
+          if(acc<30){
+            state.phaseDistanceM += dist;
+            state.totalDistanceM += dist;
+            var nowSettle = Date.now();
+            if(nowSettle >= state.phaseSettleUntil){
+              if(state.phaseSettledStartT==null) state.phaseSettledStartT = nowSettle;
+              state.phaseSettledDistanceM += dist;
+            }
+          }
           state.lastPos = {lat:c.latitude, lon:c.longitude, t:now};
           updateLiveDot(c.latitude, c.longitude);
 
@@ -642,12 +652,15 @@
 
     if(instant!=null){
       var nowMs = Date.now();
-      state.rawWindow.push({t:nowMs, v:instant});
+      state.rawWindow.push({t:nowMs, v:instant, acc:acc});
       var cutoff = nowMs - SMOOTH_WINDOW_MS;
       while(state.rawWindow.length && state.rawWindow[0].t < cutoff) state.rawWindow.shift();
-      var sum=0, count=0;
-      for(var i=0;i<state.rawWindow.length;i++){ sum += state.rawWindow[i].v; count++; }
-      state.smoothedSpeed = count ? sum/count : instant;
+      var wSum=0, vwSum=0;
+      for(var i=0;i<state.rawWindow.length;i++){
+        var w = 1/Math.max(state.rawWindow[i].acc, 3);
+        wSum += w; vwSum += state.rawWindow[i].v*w;
+      }
+      state.smoothedSpeed = wSum>0 ? vwSum/wSum : instant;
 
       state.samples.push({t:state.phaseElapsedSec, v:state.smoothedSpeed});
       if(state.samples.length>90) state.samples.shift();
@@ -658,8 +671,17 @@
 
   function updateSpeedUI(){
     document.getElementById('curSpeed').textContent = state.smoothedSpeed.toFixed(1);
-    var avg = state.phaseElapsedSec>0 ? (state.phaseDistanceM/state.phaseElapsedSec)*3.6 : 0;
-    document.getElementById('avgSpeed').textContent = avg.toFixed(1);
+
+    var settling = Date.now() < state.phaseSettleUntil || state.phaseSettledStartT==null;
+    var avg;
+    if(!settling && state.phaseSettledStartT!=null){
+      var settledElapsed = (Date.now() - state.phaseSettledStartT)/1000;
+      avg = settledElapsed>0 ? (state.phaseSettledDistanceM/settledElapsed)*3.6 : 0;
+    } else {
+      avg = state.phaseElapsedSec>0 ? (state.phaseDistanceM/state.phaseElapsedSec)*3.6 : 0;
+    }
+    document.getElementById('avgSpeed').textContent = (settling ? '~' : '') + avg.toFixed(1);
+
     var max = 0;
     for(var i=0;i<state.samples.length;i++){ if(state.samples[i].v>max) max = state.samples[i].v; }
     document.getElementById('maxSpeed').textContent = max.toFixed(1);
@@ -707,6 +729,8 @@
     state.lastPos = null; state.smoothedSpeed = 0; state.history = [];
     state.totalDistanceM = 0; state.sessionStart = Date.now();
     state.pathPoints = []; state.lastPathPushT = 0;
+    state.phaseSettleUntil = Date.now() + PHASE_SETTLE_MS;
+    state.phaseSettledDistanceM = 0; state.phaseSettledStartT = null;
 
     showView('session');
     renderSetDots();
@@ -731,7 +755,13 @@
   }
 
   function endPhase(){
-    var avg = state.phaseElapsedSec>0 ? (state.phaseDistanceM/state.phaseElapsedSec)*3.6 : 0;
+    var avg;
+    if(state.phaseSettledStartT!=null){
+      var settledElapsed = (Date.now() - state.phaseSettledStartT)/1000;
+      avg = settledElapsed>0 ? (state.phaseSettledDistanceM/settledElapsed)*3.6 : 0;
+    } else {
+      avg = state.phaseElapsedSec>0 ? (state.phaseDistanceM/state.phaseElapsedSec)*3.6 : 0;
+    }
     var max = 0;
     for(var i=0;i<state.samples.length;i++){ if(state.samples[i].v>max) max = state.samples[i].v; }
     state.history.unshift({set:state.setIndex+1, phase:state.phase, avg:avg, max:max, dur:state.phaseElapsedSec, distanceM:state.phaseDistanceM});
@@ -739,6 +769,8 @@
 
     var wasFast = state.phase==='fast';
     state.phaseDistanceM = 0; state.phaseElapsedSec = 0; state.samples = []; state.rawWindow = []; state.lastPos = null;
+    state.phaseSettleUntil = Date.now() + PHASE_SETTLE_MS;
+    state.phaseSettledDistanceM = 0; state.phaseSettledStartT = null;
 
     if(wasFast){
       state.phase = 'slow';
@@ -793,7 +825,12 @@
     state.paused = !state.paused;
     document.getElementById('pauseBtn').textContent = state.paused ? 'Nastavi' : 'Pauza';
     if(state.paused){ stopGeo(); releaseWakeLock(); }
-    else { state.lastPos = null; state.rawWindow = []; startGeo(); requestWakeLock(); }
+    else {
+      state.lastPos = null; state.rawWindow = [];
+      state.phaseSettleUntil = Date.now() + PHASE_SETTLE_MS;
+      state.phaseSettledStartT = null; state.phaseSettledDistanceM = 0;
+      startGeo(); requestWakeLock();
+    }
   }
 
   function stopSession(){
