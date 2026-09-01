@@ -445,7 +445,8 @@
     gpsReady:false, preGeoWatchId:null, forceTimeoutId:null,
     historyPushed:false,
     pathPoints:[], lastPathPushT:0, mapReturnView:'setup',
-    phaseSettleUntil:0, phaseSettledDistanceM:0, phaseSettledStartT:null
+    phaseSettleUntil:0, phaseSettledDistanceM:0, phaseSettledStartT:null,
+    currentSummarySession:null, summaryReturnView:'setup'
   };
 
   function fmtTime(sec){
@@ -801,23 +802,33 @@
     var savg = slowVals.length ? slowVals.reduce(function(a,b){return a+b.avg;},0)/slowVals.length : 0;
     var durSec = (Date.now()-state.sessionStart)/1000;
 
-    saveSessionToHistory({
+    var sessionObj = {
       date: new Date().toISOString(),
       distanceKm: state.totalDistanceM/1000,
       fastAvg: favg, slowAvg: savg, durationSec: durSec,
       intervals: state.history.slice(),
       path: state.pathPoints.slice()
-    });
+    };
+    saveSessionToHistory(sessionObj);
+    showSummaryFor(sessionObj, 'setup');
+  }
 
+  function showSummaryFor(session, returnView){
+    state.currentSummarySession = session;
+    state.summaryReturnView = returnView;
     showView('summary');
-    document.getElementById('sumDistance').textContent = (state.totalDistanceM/1000).toFixed(2)+' km';
-    document.getElementById('sumFastAvg').textContent = favg.toFixed(1);
-    document.getElementById('sumSlowAvg').textContent = savg.toFixed(1);
-    document.getElementById('sumTime').textContent = fmtTime(durSec);
+
+    document.getElementById('sumDistance').textContent = session.distanceKm.toFixed(2)+' km';
+    document.getElementById('sumFastAvg').textContent = session.fastAvg.toFixed(1);
+    document.getElementById('sumSlowAvg').textContent = session.slowAvg.toFixed(1);
+    document.getElementById('sumTime').textContent = fmtTime(session.durationSec);
 
     var list = document.getElementById('sumHistoryList');
     list.innerHTML = '';
-    state.history.slice().reverse().forEach(function(h){ list.appendChild(historyRow(h)); });
+    session.intervals.slice().reverse().forEach(function(h){ list.appendChild(historyRow(h)); });
+
+    document.getElementById('sumMapBtn').style.display = (session.path && session.path.length>1) ? 'block' : 'none';
+    document.getElementById('restartBtn').textContent = returnView==='historyView' ? 'Nazad' : 'Novi trening';
   }
 
   function pauseResume(){
@@ -905,14 +916,16 @@
     arr.forEach(function(s){
       var card = document.createElement('div');
       card.className = 'sess-card';
+      card.style.cursor = 'pointer';
       card.innerHTML =
         '<div class="sess-top"><div class="sess-date">'+fmtDate(s.date)+'</div><div class="sess-dist">'+s.distanceKm.toFixed(2)+' km</div></div>'+
         '<div class="sess-stats"><span>Brzo <b>'+s.fastAvg.toFixed(1)+'</b> km/h</span><span>Sporo <b>'+s.slowAvg.toFixed(1)+'</b> km/h</span><span>Trajanje <b>'+fmtTime(s.durationSec)+'</b></span></div>';
+      card.addEventListener('click', function(){ showSummaryFor(s, 'historyView'); });
       if(s.path && s.path.length>1){
         var btn = document.createElement('button');
         btn.className = 'sess-map-btn';
         btn.textContent = 'Mapa';
-        btn.addEventListener('click', function(){ openMap(s.path, fmtDate(s.date)); });
+        btn.addEventListener('click', function(e){ e.stopPropagation(); openMap(s.path, fmtDate(s.date)); });
         card.appendChild(btn);
       }
       wrap.appendChild(card);
@@ -930,20 +943,18 @@
   });
 
   // ---------- CSV / share ----------
-  function buildCSV(){
+  function buildCSV(intervals){
     var lines = ['Set,Faza,ProsekKmH,MaxKmH,DistancaM,TrajanjeSec'];
-    state.history.slice().reverse().forEach(function(h){
+    intervals.slice().reverse().forEach(function(h){
       lines.push(h.set+','+(h.phase==='fast'?'Brzo':'Sporo')+','+h.avg.toFixed(2)+','+h.max.toFixed(2)+','+Math.round(h.distanceM||0)+','+h.dur);
     });
     return lines.join('\n');
   }
   document.getElementById('shareBtn').addEventListener('click', async function(){
-    var fastVals = state.history.filter(function(h){return h.phase==='fast';});
-    var slowVals = state.history.filter(function(h){return h.phase==='slow';});
-    var favg = fastVals.length ? fastVals.reduce(function(a,b){return a+b.avg;},0)/fastVals.length : 0;
-    var savg = slowVals.length ? slowVals.reduce(function(a,b){return a+b.avg;},0)/slowVals.length : 0;
-    var csv = buildCSV();
-    var summaryText = 'IWT trening: '+(state.totalDistanceM/1000).toFixed(2)+' km, prosek brzo '+favg.toFixed(1)+' km/h, sporo '+savg.toFixed(1)+' km/h.';
+    var session = state.currentSummarySession;
+    if(!session) return;
+    var csv = buildCSV(session.intervals);
+    var summaryText = 'IWT trening: '+session.distanceKm.toFixed(2)+' km, prosek brzo '+session.fastAvg.toFixed(1)+' km/h, sporo '+session.slowAvg.toFixed(1)+' km/h.';
 
     if(navigator.canShare){
       try{
@@ -1119,7 +1130,11 @@
   }
 
   document.getElementById('closeMapBtn').addEventListener('click', closeMap);
-  document.getElementById('sumMapBtn').addEventListener('click', function(){ openMap(state.pathPoints, 'Poslednji trening'); });
+  document.getElementById('sumMapBtn').addEventListener('click', function(){
+    if(state.currentSummarySession && state.currentSummarySession.path){
+      openMap(state.currentSummarySession.path, fmtDate(state.currentSummarySession.date));
+    }
+  });
   document.getElementById('liveMapBtn').addEventListener('click', function(){
     if(!state.running) return;
     openMap(state.pathPoints, 'Uživo', {live:true});
@@ -1130,7 +1145,7 @@
   document.getElementById('startBtn').addEventListener('click', function(){ if(!this.disabled) startSession(); });
   document.getElementById('pauseBtn').addEventListener('click', pauseResume);
   document.getElementById('stopBtn').addEventListener('click', stopSession);
-  document.getElementById('restartBtn').addEventListener('click', function(){ showView('setup'); });
+  document.getElementById('restartBtn').addEventListener('click', function(){ showView(state.summaryReturnView || 'setup'); });
 
   window.addEventListener('visibilitychange', function(){
     if(document.visibilityState==='visible' && state.running && !state.paused){ requestWakeLock(); }
