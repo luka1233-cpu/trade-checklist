@@ -620,6 +620,8 @@
 
     if(state.lastPos){
       var dt = (now - state.lastPos.t)/1000;
+      var advanced = false;
+
       if(dt>0 && dt<8){
         var dist = haversine(state.lastPos.lat, state.lastPos.lon, c.latitude, c.longitude);
         var derivedKmh = (dist/dt)*3.6;
@@ -634,9 +636,6 @@
               state.phaseSettledDistanceM += dist;
             }
           }
-          state.lastPos = {lat:c.latitude, lon:c.longitude, t:now};
-          updateLiveDot(c.latitude, c.longitude);
-
           var nowForPath = Date.now();
           if(acc<40 && nowForPath - state.lastPathPushT >= 5000){
             state.pathPoints.push({lat:c.latitude, lon:c.longitude, phase:state.phase});
@@ -644,6 +643,20 @@
             refreshLiveRoute();
           }
         }
+        // Uvek pomeri referentnu tačku na svežu poziciju, čak i kad je ovaj
+        // korak odbačen kao neverovatan skok — inače sledeća merenja i dalje
+        // porede sa zaglavljenom starom tačkom i lančano se odbacuju do kraja intervala.
+        state.lastPos = {lat:c.latitude, lon:c.longitude, t:now};
+        updateLiveDot(c.latitude, c.longitude);
+        advanced = true;
+      } else {
+        // Veliki vremenski razmak (npr. GPS je bio bez signala) — ne brojimo
+        // distancu za taj korak (bila bi nepouzdana), ali svakako resetujemo
+        // referentnu tačku na sadašnju poziciju da sledeća merenja budu čista.
+        state.lastPos = {lat:c.latitude, lon:c.longitude, t:now};
+        updateLiveDot(c.latitude, c.longitude);
+        if(c.speed!=null && isFinite(c.speed) && c.speed>=0) instant = c.speed*3.6;
+        advanced = true;
       }
     } else {
       state.lastPos = {lat:c.latitude, lon:c.longitude, t:now};
