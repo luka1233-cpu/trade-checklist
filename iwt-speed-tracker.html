@@ -229,6 +229,21 @@
     </div>
 
     <div class="card">
+      <h3>GPS kalibracija (opciono)</h3>
+      <div class="field">
+        <div>
+          <label>Korekcioni faktor</label>
+          <div class="hint">Podesi ako uporediš sa drugom app (npr. Huawei Health)</div>
+        </div>
+        <div class="stepper">
+          <button data-cfgf="gpsCorrection" data-d="-0.01">−</button>
+          <div class="val" id="valGpsCorrection">1.00</div>
+          <button data-cfgf="gpsCorrection" data-d="0.01">+</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
       <h3>Zvuk</h3>
       <div class="field">
         <div><label>Jačina</label></div>
@@ -245,7 +260,7 @@
 
     <button class="primary-btn" id="startBtn" disabled>Čekam GPS…</button>
     <button class="ghost-btn" id="forceStartBtn" style="display:none;">Pokreni ipak (bez čekanja GPS-a)</button>
-    <div style="text-align:center;color:var(--muted);font-size:11px;margin-top:10px;">v10 — GPS fix (referentna tačka)</div>
+    <div style="text-align:center;color:var(--muted);font-size:11px;margin-top:10px;">v12 — GPS korekcioni faktor</div>
   </div>
 
   <!-- SESSION -->
@@ -361,14 +376,14 @@
   var TONE_LABELS = { beep:'Bip', siren:'Sirena', bell:'Zvono', long:'Dugi ton' };
   var TONE_ORDER = ['beep','siren','bell','long'];
   var SMOOTH_WINDOW_MS = 4000;
-  var PHASE_SETTLE_MS = 4000;
+  var PHASE_SETTLE_MS = 8000;
   var LOCK_HOLD_MS = 1400;
   var GPS_READY_ACC = 20;
 
   var cfg = loadSettings();
 
   function loadSettings(){
-    var def = { fastMin:3, slowMin:3, sets:5, volume:0.8, toneStyle:'beep', fastTarget:0, slowTarget:0 };
+    var def = { fastMin:3, slowMin:3, sets:5, volume:0.8, toneStyle:'beep', fastTarget:0, slowTarget:0, gpsCorrection:1.0 };
     try{
       var raw = localStorage.getItem('iwt_settings');
       if(raw){ var s = JSON.parse(raw); for(var k in def){ if(s[k]!=null) def[k]=s[k]; } }
@@ -385,6 +400,7 @@
     document.getElementById('valSets').textContent = cfg.sets;
     document.getElementById('valFastTarget').textContent = cfg.fastTarget.toFixed(1);
     document.getElementById('valSlowTarget').textContent = cfg.slowTarget.toFixed(1);
+    document.getElementById('valGpsCorrection').textContent = cfg.gpsCorrection.toFixed(2);
     document.getElementById('totalHint').textContent = '= '+((cfg.fastMin+cfg.slowMin)*cfg.sets)+' min ukupno';
     document.getElementById('volSlider').value = Math.round(cfg.volume*100);
     document.getElementById('toneHint').textContent = TONE_LABELS[cfg.toneStyle];
@@ -402,7 +418,11 @@
   document.querySelectorAll('.stepper button[data-cfgf]').forEach(function(btn){
     btn.addEventListener('click', function(){
       var key = btn.dataset.cfgf, d = parseFloat(btn.dataset.d);
-      cfg[key] = Math.min(15, Math.max(0, Math.round((cfg[key]+d)*10)/10));
+      if(key==='gpsCorrection'){
+        cfg[key] = Math.min(1.5, Math.max(0.5, Math.round((cfg[key]+d)*100)/100));
+      } else {
+        cfg[key] = Math.min(15, Math.max(0, Math.round((cfg[key]+d)*10)/10));
+      }
       saveSettings(); refreshSetupUI();
     });
   });
@@ -624,7 +644,7 @@
       var advanced = false;
 
       if(dt>0 && dt<8){
-        var dist = haversine(state.lastPos.lat, state.lastPos.lon, c.latitude, c.longitude);
+        var dist = haversine(state.lastPos.lat, state.lastPos.lon, c.latitude, c.longitude) * cfg.gpsCorrection;
         var derivedKmh = (dist/dt)*3.6;
         if(derivedKmh < 20){
           instant = (c.speed!=null && isFinite(c.speed) && c.speed>=0) ? c.speed*3.6 : derivedKmh;
