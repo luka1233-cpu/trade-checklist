@@ -260,7 +260,7 @@
 
     <button class="primary-btn" id="startBtn" disabled>Čekam GPS…</button>
     <button class="ghost-btn" id="forceStartBtn" style="display:none;">Pokreni ipak (bez čekanja GPS-a)</button>
-    <div style="text-align:center;color:var(--muted);font-size:11px;margin-top:10px;">v12 — GPS korekcioni faktor</div>
+    <div style="text-align:center;color:var(--muted);font-size:11px;margin-top:10px;">v13 — niži prag za GPS skokove (10 km/h)</div>
   </div>
 
   <!-- SESSION -->
@@ -646,7 +646,7 @@
       if(dt>0 && dt<8){
         var dist = haversine(state.lastPos.lat, state.lastPos.lon, c.latitude, c.longitude) * cfg.gpsCorrection;
         var derivedKmh = (dist/dt)*3.6;
-        if(derivedKmh < 20){
+        if(derivedKmh < 10){
           instant = (c.speed!=null && isFinite(c.speed) && c.speed>=0) ? c.speed*3.6 : derivedKmh;
           if(acc<30){
             state.phaseDistanceM += dist;
